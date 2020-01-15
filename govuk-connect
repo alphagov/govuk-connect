@@ -981,7 +981,6 @@ TYPES = {
 }
 
 def main
-  system('govuk check-for-govuk-guix-updates')
   check_ruby_version_greater_than(required_major: 2, required_minor: 0)
 
   double_dash_index = ARGV.index '--'
