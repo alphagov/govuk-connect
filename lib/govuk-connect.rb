@@ -1053,5 +1053,3 @@ rescue Interrupt
   # Handle SIGTERM without printing a stacktrace
   exit 1
 end
-
-main
