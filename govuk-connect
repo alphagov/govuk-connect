@@ -183,10 +183,7 @@ end
 
 def print_ssh_username_configuration_help
   info "The SSH username used was: #{bold(ssh_username)}"
-  info "Check this is correct, and it it isn't run the following command to set the correct username"
-  newline
-  info "  #{bold('govuk config ssh_username USERNAME')}"
-  newline
+  info "Check this is correct, and if it isn't, set the `USER` environment variable to the correct username."
 end
 
 # From Rosetta Code: https://rosettacode.org/wiki/Levenshtein_distance#Ruby
