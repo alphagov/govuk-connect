@@ -7,5 +7,5 @@ This is a command line tool to help you connect to GOV.UK's infrastructure.
 To install:
 
 ```bash
-gem install govuk_connect
+gem install govuk-connect
 ```
