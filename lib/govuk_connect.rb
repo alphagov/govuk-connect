@@ -80,6 +80,7 @@ require 'open3'
 require 'socket'
 require 'timeout'
 require 'optparse'
+require 'govuk_connect/version'
 
 def bold(string)
   "\e[1m#{string}\e[0m"
@@ -818,6 +819,10 @@ def parse_options
       info EXAMPLES
       exit
     end
+    opts.on('-V', '--version', 'Prints version information') do
+      info "#{GovukConnect::VERSION}"
+      exit
+    end
   end
 
   @option_parser.parse!
@@ -1053,5 +1058,3 @@ rescue Interrupt
   # Handle SIGTERM without printing a stacktrace
   exit 1
 end
-
-main
