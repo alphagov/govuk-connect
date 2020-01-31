@@ -378,7 +378,7 @@ def get_domains_for_node_class(target, environment, hosting, ssh_username)
 end
 
 def govuk_directory
-  File.dirname(File.dirname(File.dirname(__FILE__)))
+  File.join(ENV['HOME'], 'govuk')
 end
 
 def govuk_puppet_node_class_data(environment, hosting)
