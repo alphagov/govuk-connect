@@ -1,4 +1,4 @@
-# Unreleased
+# 0.0.2
 
 * Fix path to path to govuk directory
 
