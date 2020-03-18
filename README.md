@@ -15,6 +15,15 @@ brew tap alphagov/gds # This will exist if you use the gds-cli
 brew install govuk-connect
 ```
 
+> Note: If you previously installed `govuk-connect` via RubyGems, but
+> switched to using Homebrew, you may have to do the following to get
+> it to work:
+> 
+> ```
+> gem uninstall govuk-connect
+> rbenv rehash
+> ```
+
 ### With RubyGems:
 
 ```bash
