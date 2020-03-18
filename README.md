@@ -20,7 +20,7 @@ brew install govuk-connect
 > it to work:
 > 
 > ```
-> gem uninstall govuk-connect
+> sudo gem uninstall govuk-connect
 > rbenv rehash
 > ```
 
@@ -43,4 +43,3 @@ gds govuk connect --help
 It can be shortened to `gds govuk c`.
 
 Whichever installation method you choose, you can use the above method or the standalone `govuk-connect` binary.
-
