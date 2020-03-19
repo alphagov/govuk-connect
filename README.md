@@ -43,3 +43,20 @@ gds govuk connect --help
 It can be shortened to `gds govuk c`.
 
 Whichever installation method you choose, you can use the above method or the standalone `govuk-connect` binary.
+
+## Releases
+
+When you've merged the PR that bumps the version, publish a release tag and the gem to RubyGems from the `master` branch:
+
+```bash
+gem build govuk-connect
+gem publish govuk-connect-<version>.gem # Credentials are in govuk-secrets/pass/2ndline
+git tag <version> # eg 0.0.3
+git push origin <version>
+```
+
+To raise a PR to bump the Homebrew formula version, run:
+
+`brew bump-formula-pr govuk-connect --url=https://rubygems.org/downloads/govuk-connect-<version>.gem --no-fork`
+
+PRs to automate any of this process with GitHub Actions are welcome!
