@@ -190,21 +190,21 @@ class GovukConnect::CLI
   end
 
   # From Rosetta Code: https://rosettacode.org/wiki/Levenshtein_distance#Ruby
-  def levenshtein_distance(a, b)
-    a = a.downcase
-    b = b.downcase
-    costs = Array(0..b.length) # i == 0
-    (1..a.length).each do |i|
+  def levenshtein_distance(string1, string2)
+    string1 = string1.downcase
+    string2 = string2.downcase
+    costs = Array(0..string2.length) # i == 0
+    (1..string1.length).each do |i|
       costs[0] = i
       nw = i - 1 # j == 0; nw is lev(i-1, j)
-      (1..b.length).each do |j|
+      (1..string2.length).each do |j|
         costs[j], nw = [
           costs[j] + 1, costs[j - 1] + 1,
-          a[i - 1] == b[j - 1] ? nw : nw + 1
+          string1[i - 1] == string2[j - 1] ? nw : nw + 1
         ].min, costs[j]
       end
     end
-    costs[b.length]
+    costs[string2.length]
   end
 
   def strings_similar_to(target, strings)
@@ -500,9 +500,8 @@ class GovukConnect::CLI
     aws_node_types = govuk_node_list_classes(environment, :aws)
     carrenza_node_types = govuk_node_list_classes(environment, :carrenza)
 
-    if
-      aws_node_types.include?(node_type) &&
-          carrenza_node_types.include?(node_type)
+    if aws_node_types.include?(node_type) &&
+        carrenza_node_types.include?(node_type)
 
       error "error: ambiguous hosting for #{node_type} in #{environment}"
       newline
@@ -677,7 +676,7 @@ class GovukConnect::CLI
         info "There are #{n_machines} of this class"
 
         if number
-          unless number > 0
+          unless number.positive?
             newline
             error "error: invalid machine number '#{number}', it must be > 0"
             exit 1
@@ -774,6 +773,7 @@ class GovukConnect::CLI
   def parse_options(argv)
     options = {}
 
+    # rubocop:disable Metrics/BlockLength
     @option_parser = OptionParser.new do |opts|
       opts.banner = USAGE_BANNER
 
@@ -824,6 +824,7 @@ class GovukConnect::CLI
         exit
       end
     end
+    # rubocop:enable Metrics/BlockLength
 
     @option_parser.parse!(argv)
 
