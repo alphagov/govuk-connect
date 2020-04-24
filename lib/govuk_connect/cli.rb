@@ -71,13 +71,13 @@
 #   govuk-connect sidekiq-monitoring -e integration
 
 
-require 'uri'
-require 'yaml'
-require 'open3'
-require 'socket'
-require 'timeout'
-require 'optparse'
-require 'govuk_connect/version'
+require "uri"
+require "yaml"
+require "open3"
+require "socket"
+require "timeout"
+require "optparse"
+require "govuk_connect/version"
 
 class GovukConnect::CLI
   def self.bold(string)
@@ -88,9 +88,9 @@ class GovukConnect::CLI
     self.class.bold(string)
   end
 
-  USAGE_BANNER = 'Usage: govuk-connect TYPE TARGET [options]'
+  USAGE_BANNER = "Usage: govuk-connect TYPE TARGET [options]".freeze
 
-  EXAMPLES = <<-EXAMPLES
+  EXAMPLES = <<-EXAMPLES.freeze
     govuk-connect ssh --environment integration backend
 
     govuk-connect app-console --environment staging publishing-api
@@ -102,7 +102,7 @@ class GovukConnect::CLI
     govuk-connect sidekiq-monitoring -e integration
   EXAMPLES
 
-  MACHINE_TARGET_DESCRIPTION  = <<-DOCS
+  MACHINE_TARGET_DESCRIPTION = <<-DOCS.freeze
     The ssh, rabbitmq and sidekiq-monitoring connection types target
     machines.
 
@@ -121,7 +121,7 @@ class GovukConnect::CLI
       govuk-connect ssh -e integration backend#{bold(':2')}
   DOCS
 
-  APP_TARGET_DESCRIPTION = <<-DOCS
+  APP_TARGET_DESCRIPTION = <<-DOCS.freeze
     The app-console and app-dbconsole connection types target
     applications.
 
@@ -141,35 +141,35 @@ class GovukConnect::CLI
   DOCS
 
   CONNECTION_TYPE_DESCRIPTIONS = {
-    'ssh' => 'Connect to a machine through SSH.',
-    'app-console' => 'Launch a console for an application.  For example, a rails console when connecting to a Rails application.',
-    'app-dbconsole' => 'Launch a console for the database for an application.',
-    'rabbitmq' => 'Setup port forwarding to the RabbitMQ admin interface.',
-    'sidekiq-monitoring' => 'Setup port forwarding to the Sidekiq Monitoring application.'
-  }
+    "ssh" => "Connect to a machine through SSH.",
+    "app-console" => "Launch a console for an application.  For example, a rails console when connecting to a Rails application.",
+    "app-dbconsole" => "Launch a console for the database for an application.",
+    "rabbitmq" => "Setup port forwarding to the RabbitMQ admin interface.",
+    "sidekiq-monitoring" => "Setup port forwarding to the Sidekiq Monitoring application.",
+  }.freeze
 
   RABBITMQ_PORT = 15672
   SIDEKIQ_MONITORING_PORT = 3211
 
   JUMPBOXES = {
     ci: {
-      carrenza: 'ci-jumpbox.integration.publishing.service.gov.uk',
+      carrenza: "ci-jumpbox.integration.publishing.service.gov.uk",
     },
     integration: {
-      aws: 'jumpbox.integration.publishing.service.gov.uk',
+      aws: "jumpbox.integration.publishing.service.gov.uk",
     },
     staging: {
-      carrenza: 'jumpbox.staging.publishing.service.gov.uk',
-      aws: 'jumpbox.staging.govuk.digital',
+      carrenza: "jumpbox.staging.publishing.service.gov.uk",
+      aws: "jumpbox.staging.govuk.digital",
     },
     production: {
-      carrenza: 'jumpbox.publishing.service.gov.uk',
-      aws: 'jumpbox.production.govuk.digital',
-    }
-  }
+      carrenza: "jumpbox.publishing.service.gov.uk",
+      aws: "jumpbox.production.govuk.digital",
+    },
+  }.freeze
 
   def log(message)
-    STDERR.puts message if $verbose
+    warn message if $verbose
   end
 
   def newline
@@ -177,11 +177,11 @@ class GovukConnect::CLI
   end
 
   def info(message)
-    STDERR.puts message
+    warn message
   end
 
   def error(message)
-    STDERR.puts "\e[1m\e[31m#{message}\e[0m"
+    warn "\e[1m\e[31m#{message}\e[0m"
   end
 
   def print_ssh_username_configuration_help
@@ -191,14 +191,16 @@ class GovukConnect::CLI
 
   # From Rosetta Code: https://rosettacode.org/wiki/Levenshtein_distance#Ruby
   def levenshtein_distance(a, b)
-    a, b = a.downcase, b.downcase
+    a = a.downcase
+    b = b.downcase
     costs = Array(0..b.length) # i == 0
     (1..a.length).each do |i|
-      costs[0], nw = i, i - 1  # j == 0; nw is lev(i-1, j)
+      costs[0] = i
+      nw = i - 1 # j == 0; nw is lev(i-1, j)
       (1..b.length).each do |j|
         costs[j], nw = [
-          costs[j] + 1, costs[j-1] + 1,
-          a[i-1] == b[j-1] ? nw : nw + 1
+          costs[j] + 1, costs[j - 1] + 1,
+          a[i - 1] == b[j - 1] ? nw : nw + 1
         ].min, costs[j]
       end
     end
@@ -212,7 +214,7 @@ class GovukConnect::CLI
   end
 
   def check_ruby_version_greater_than(required_major:, required_minor:)
-    major, minor = RUBY_VERSION.split '.'
+    major, minor = RUBY_VERSION.split "."
 
     insufficient_version = (
       major.to_i < required_major || (
@@ -233,7 +235,7 @@ class GovukConnect::CLI
     # No idea how well this works, but it's hopefully better than nothing
 
     log "debug: checking if port #{port} is free"
-    Socket.tcp('127.0.0.1', port, connect_timeout: 0.1) {}
+    Socket.tcp("127.0.0.1", port, connect_timeout: 0.1) {}
     false
   rescue Errno::ETIMEDOUT
     log "debug: port #{port} doesn't seem to be free"
@@ -259,14 +261,14 @@ class GovukConnect::CLI
 
   def hosting_providers
     JUMPBOXES
-      .map { |env, jumpboxes| jumpboxes.keys }
+      .map { |_env, jumpboxes| jumpboxes.keys }
       .flatten
       .uniq
   end
 
   def jumpbox_for_environment_and_hosting(environment, hosting)
-    raise 'missing environment' unless environment
-    raise 'missing hosting' unless hosting
+    raise "missing environment" unless environment
+    raise "missing hosting" unless hosting
 
     jumpbox = JUMPBOXES[environment][hosting]
 
@@ -290,31 +292,31 @@ class GovukConnect::CLI
 
   def config_file
     @config_file ||= begin
-      directory = ENV.fetch('XDG_CONFIG_HOME', "#{Dir.home}/.config")
+      directory = ENV.fetch("XDG_CONFIG_HOME", "#{Dir.home}/.config")
 
-      File.join(directory, 'config.yaml')
+      File.join(directory, "config.yaml")
     end
   end
 
   def ssh_username
     @ssh_username ||= begin
       if File.exist? config_file
-        config_ssh_username = YAML::load_file(config_file)['ssh_username']
+        config_ssh_username = YAML::load_file(config_file)["ssh_username"]
       end
 
-      config_ssh_username or ENV['USER']
+      config_ssh_username || ENV["USER"]
     end
   end
 
   def ssh_identity_file
     @ssh_identity_file ||= begin
-      YAML::load_file(config_file)['ssh_identity_file'] if File.exist? config_file
+      YAML::load_file(config_file)["ssh_identity_file"] if File.exist? config_file
     end
   end
 
   def ssh_identity_arguments
     if ssh_identity_file
-      ['-i', ssh_identity_file]
+      ["-i", ssh_identity_file]
     else
       []
     end
@@ -327,15 +329,15 @@ class GovukConnect::CLI
   def govuk_node_list_classes(environment, hosting)
     log "debug: looking up classes in #{hosting}/#{environment}"
     command = [
-      'ssh',
-      '-o', 'ConnectTimeout=2', # Show a failure quickly
+      "ssh",
+      "-o", "ConnectTimeout=2", # Show a failure quickly
       *ssh_identity_arguments,
       user_at_host(
         ssh_username,
-        jumpbox_for_environment_and_hosting(environment, hosting)
+        jumpbox_for_environment_and_hosting(environment, hosting),
       ),
-      "govuk_node_list --classes",
-    ].join(' ')
+      "govuk_node_list --classes"
+    ].join(" ")
 
     log "debug: running command: #{command}"
     output, status = Open3.capture2(command)
@@ -357,15 +359,15 @@ class GovukConnect::CLI
 
   def get_domains_for_node_class(target, environment, hosting, ssh_username)
     command = [
-      'ssh',
-      '-o', 'ConnectTimeout=2', # Show a failure quickly
+      "ssh",
+      "-o", "ConnectTimeout=2", # Show a failure quickly
       *ssh_identity_arguments,
       user_at_host(
         ssh_username,
-        jumpbox_for_environment_and_hosting(environment, hosting)
+        jumpbox_for_environment_and_hosting(environment, hosting),
       ),
-      "govuk_node_list -c #{target}",
-    ].join(' ')
+      "govuk_node_list -c #{target}"
+    ].join(" ")
 
     output, status = Open3.capture2(command)
 
@@ -380,7 +382,7 @@ class GovukConnect::CLI
   end
 
   def govuk_directory
-    File.join(ENV['HOME'], 'govuk')
+    File.join(ENV["HOME"], "govuk")
   end
 
   def govuk_puppet_node_class_data(environment, hosting)
@@ -388,11 +390,11 @@ class GovukConnect::CLI
 
     local_hieradata_root = File.join(
       govuk_directory,
-      'govuk-puppet',
+      "govuk-puppet",
       {
-        carrenza: 'hieradata',
-        aws: 'hieradata_aws'
-      }[hosting]
+        carrenza: "hieradata",
+        aws: "hieradata_aws",
+      }[hosting],
     )
 
     hieradata_file = File.join(local_hieradata_root, "#{environment}.yaml")
@@ -400,21 +402,21 @@ class GovukConnect::CLI
 
     environment_specific_hieradata = YAML::load_file(hieradata_file)
 
-    if environment_specific_hieradata['node_class']
-      environment_specific_hieradata['node_class']
+    if environment_specific_hieradata["node_class"]
+      environment_specific_hieradata["node_class"]
     else
       common_hieradata = YAML::load_file(
-        File.join(local_hieradata_root, 'common.yaml')
+        File.join(local_hieradata_root, "common.yaml"),
       )
 
-      common_hieradata['node_class']
+      common_hieradata["node_class"]
     end
   end
 
   def node_classes_for_environment_and_hosting(environment, hosting)
     govuk_puppet_node_class_data(
       environment,
-      hosting
+      hosting,
     ).map do |node_class, _data|
       node_class
     end
@@ -423,11 +425,11 @@ class GovukConnect::CLI
   def application_names_from_node_class_data(environment, hosting)
     node_class_data = govuk_puppet_node_class_data(
       environment,
-      hosting
+      hosting,
     )
 
-    all_names = node_class_data.flat_map do |node_class, data|
-      data['apps']
+    all_names = node_class_data.flat_map do |_node_class, data|
+      data["apps"]
     end
 
     all_names.sort.uniq
@@ -438,12 +440,12 @@ class GovukConnect::CLI
 
     node_class_data = govuk_puppet_node_class_data(
       environment,
-      hosting
+      hosting,
     )
 
     app_lookup_hash = {}
     node_class_data.each do |node_class, data|
-      data['apps'].each do |app|
+      data["apps"].each do |app|
         if app_lookup_hash.key? app
           app_lookup_hash[app] += [node_class]
         else
@@ -477,15 +479,13 @@ class GovukConnect::CLI
 
   def hosting_for_target_and_environment(target, environment)
     hosting = single_hosting_provider_for_environment(
-      environment
+      environment,
     )
 
     unless hosting
       hosting, name, _number = parse_hosting_name_and_number(target)
 
-      unless hosting
-        hosting = hosting_for_node_type(name, environment)
-      end
+      hosting ||= hosting_for_node_type(name, environment)
     end
 
     hosting
@@ -500,10 +500,10 @@ class GovukConnect::CLI
     aws_node_types = govuk_node_list_classes(environment, :aws)
     carrenza_node_types = govuk_node_list_classes(environment, :carrenza)
 
-    if (
+    if
       aws_node_types.include?(node_type) &&
-      carrenza_node_types.include?(node_type)
-    )
+          carrenza_node_types.include?(node_type)
+
       error "error: ambiguous hosting for #{node_type} in #{environment}"
       newline
       info "specify the hosting provider and node type, for example: "
@@ -581,13 +581,11 @@ class GovukConnect::CLI
 
     info "The relevant hosting provider is #{bold(hosting)}"
 
-    unless node_class
-      node_class = node_class_for_app(
-        app_name,
-        environment,
-        hosting
+    node_class ||= node_class_for_app(
+      app_name,
+      environment,
+      hosting,
       )
-    end
 
     unless node_class
       error "error: application '#{app_name}' not found."
@@ -595,7 +593,7 @@ class GovukConnect::CLI
 
       application_names = application_names_from_node_class_data(
         environment,
-        hosting
+        hosting,
       )
 
       similar_application_names = strings_similar_to(app_name, application_names)
@@ -618,15 +616,15 @@ class GovukConnect::CLI
       {
         hosting: hosting,
         name: node_class,
-        number: number
+        number: number,
       },
       environment,
-      command: "govuk_app_#{command} #{app_name}"
+      command: "govuk_app_#{command} #{app_name}",
     )
   end
 
   def ssh(
-        target,
+    target,
         environment,
         command: false,
         port_forward: false,
@@ -637,10 +635,10 @@ class GovukConnect::CLI
     # Split something like aws/backend:2 in to :aws, 'backend', 2
     hosting, name, number = parse_hosting_name_and_number(target)
 
-    if name.end_with? '.internal'
+    if name.end_with? ".internal"
       ssh_target = name
       hosting = :aws
-    elsif name.end_with? '.gov.uk'
+    elsif name.end_with? ".gov.uk"
       ssh_target = name
       hosting = :carrenza
     else
@@ -651,7 +649,7 @@ class GovukConnect::CLI
         name,
         environment,
         hosting,
-        ssh_username
+        ssh_username,
       )
 
       if domains.length.zero?
@@ -701,29 +699,29 @@ class GovukConnect::CLI
     end
 
     ssh_command = [
-      'ssh',
+      "ssh",
       *ssh_identity_arguments,
-      '-J', user_at_host(
+      "-J", user_at_host(
         ssh_username,
-        jumpbox_for_environment_and_hosting(environment, hosting)
+        jumpbox_for_environment_and_hosting(environment, hosting),
       ),
       user_at_host(
         ssh_username,
-        ssh_target
+        ssh_target,
       )
     ]
 
     if command
       ssh_command += [
-        '-t', # Force tty allocation so that interactive commands work
-        command
+        "-t", # Force tty allocation so that interactive commands work
+        command,
       ]
     elsif port_forward
       localhost_port = random_free_port
 
       ssh_command += [
-        '-N',
-        '-L', "#{localhost_port}:127.0.0.1:#{port_forward}"
+        "-N",
+        "-L", "#{localhost_port}:127.0.0.1:#{port_forward}"
       ]
 
       info "Port forwarding setup, access:\n\n  http://127.0.0.1:#{localhost_port}/\n\n"
@@ -738,14 +736,14 @@ class GovukConnect::CLI
 
   def rabbitmq_root_password_command(hosting, environment)
     hieradata_directory = {
-      aws: 'puppet_aws',
-      carrenza: 'puppet'
+      aws: "puppet_aws",
+      carrenza: "puppet",
     }[hosting]
 
     directory = File.join(
       govuk_directory,
-      'govuk-secrets',
-      hieradata_directory
+      "govuk-secrets",
+      hieradata_directory,
     )
 
     "cd #{directory} && rake eyaml:decrypt_value[#{environment},govuk_rabbitmq::root_password]"
@@ -755,14 +753,14 @@ class GovukConnect::CLI
     uri = URI(url)
 
     host_to_hosting_and_environment = {
-     'ci-alert.integration.publishing.service.gov.uk' => %i[carrenza ci],
-     'alert.integration.publishing.service.gov.uk' => %i[aws integration],
-     'alert.staging.govuk.digital' => %i[aws staging],
-     'alert.blue.staging.govuk.digital' => %i[aws staging],
-     'alert.staging.publishing.service.gov.uk' => %i[carrenza staging],
-     'alert.production.govuk.digital' => %i[aws production],
-     'alert.blue.production.govuk.digital' => %i[aws production],
-     'alert.publishing.service.gov.uk' => %i[carrenza production],
+     "ci-alert.integration.publishing.service.gov.uk" => %i[carrenza ci],
+     "alert.integration.publishing.service.gov.uk" => %i[aws integration],
+     "alert.staging.govuk.digital" => %i[aws staging],
+     "alert.blue.staging.govuk.digital" => %i[aws staging],
+     "alert.staging.publishing.service.gov.uk" => %i[carrenza staging],
+     "alert.production.govuk.digital" => %i[aws production],
+     "alert.blue.production.govuk.digital" => %i[aws production],
+     "alert.publishing.service.gov.uk" => %i[carrenza production],
     }
 
     unless host_to_hosting_and_environment.key? uri.host
@@ -780,49 +778,49 @@ class GovukConnect::CLI
       opts.banner = USAGE_BANNER
 
       opts.on(
-        '-e',
-        '--environment ENVIRONMENT',
-        'Select which environment to connect to'
+        "-e",
+        "--environment ENVIRONMENT",
+        "Select which environment to connect to",
       ) do |o|
         options[:environment] = o.to_sym
       end
       opts.on(
-        '--hosting-and-environment-from-alert-url URL',
-        'Select which environment to connect to based on the URL provided.'
+        "--hosting-and-environment-from-alert-url URL",
+        "Select which environment to connect to based on the URL provided.",
       ) do |o|
         hosting, environment = hosting_and_environment_from_url(o)
         options[:hosting] = hosting
         options[:environment] = environment
       end
-      opts.on('-p', '--port-forward SERVICE', 'Connect to a remote port') do |o|
+      opts.on("-p", "--port-forward SERVICE", "Connect to a remote port") do |o|
         options[:port_forward] = o
       end
-      opts.on('-v', '--verbose', 'Enable more detailed logging') do
+      opts.on("-v", "--verbose", "Enable more detailed logging") do
         $verbose = true
       end
 
-      opts.on('-h', '--help', 'Prints usage information and examples') do
+      opts.on("-h", "--help", "Prints usage information and examples") do
         info opts
         newline
-        info bold('CONNECTION TYPES')
+        info bold("CONNECTION TYPES")
         types.keys.each do |x|
           info "  #{x}"
           description = CONNECTION_TYPE_DESCRIPTIONS[x]
           info "    #{description}" if description
         end
         newline
-        info bold('MACHINE TARGET')
+        info bold("MACHINE TARGET")
         info MACHINE_TARGET_DESCRIPTION
         newline
-        info bold('APPLICATION TARGET')
+        info bold("APPLICATION TARGET")
         info APP_TARGET_DESCRIPTION
         newline
-        info bold('EXAMPLES')
+        info bold("EXAMPLES")
         info EXAMPLES
         exit
       end
-      opts.on('-V', '--version', 'Prints version information') do
-        info "#{GovukConnect::VERSION}"
+      opts.on("-V", "--version", "Prints version information") do
+        info GovukConnect::VERSION.to_s
         exit
       end
     end
@@ -840,8 +838,8 @@ class GovukConnect::CLI
       end
     end
 
-    if target.include? '/'
-      hosting, name_and_number = target.split '/'
+    if target.include? "/"
+      hosting, name_and_number = target.split "/"
 
       hosting = hosting.to_sym
 
@@ -857,8 +855,8 @@ class GovukConnect::CLI
       name_and_number = target
     end
 
-    if name_and_number.include? ':'
-      name, number = name_and_number.split ':'
+    if name_and_number.include? ":"
+      name, number = name_and_number.split ":"
 
       number = number.to_i
     else
@@ -867,7 +865,7 @@ class GovukConnect::CLI
 
     log "debug: hosting: #{hosting.inspect}, name: #{name.inspect}, number: #{number.inspect}"
 
-    return hosting, name, number
+    [hosting, name, number]
   end
 
   def parse_node_class_app_name_and_number(target)
@@ -878,14 +876,14 @@ class GovukConnect::CLI
       end
     end
 
-    if target.include? '/'
-      node_class, app_name_and_number = target.split '/'
+    if target.include? "/"
+      node_class, app_name_and_number = target.split "/"
     else
       app_name_and_number = target
     end
 
-    if app_name_and_number.include? ':'
-      app_name, number = name_and_number.split ':'
+    if app_name_and_number.include? ":"
+      app_name, number = name_and_number.split ":"
 
       number = number.to_i
     else
@@ -894,15 +892,15 @@ class GovukConnect::CLI
 
     log "debug: node_class: #{node_class.inspect}, app_name: #{app_name.inspect}, number: #{number.inspect}"
 
-    return node_class, app_name, number
+    [node_class, app_name, number]
   end
 
   def check_for_target(target)
     unless target
       error "error: you must specify the target\n"
-      STDERR.puts USAGE_BANNER
+      warn USAGE_BANNER
       STDERR.puts
-      STDERR.puts EXAMPLES
+      warn EXAMPLES
       exit 1
     end
   end
@@ -916,26 +914,26 @@ class GovukConnect::CLI
 
   def types
     @types ||= {
-      'app-console' => Proc.new do |target, environment, args, _options|
+      "app-console" => Proc.new do |target, environment, args, _options|
         check_for_target(target)
-        check_for_additional_arguments('app-console', args)
-        govuk_app_command(target, environment, 'console')
+        check_for_additional_arguments("app-console", args)
+        govuk_app_command(target, environment, "console")
       end,
 
-      'app-dbconsole' => Proc.new do |target, environment, args, _options|
+      "app-dbconsole" => Proc.new do |target, environment, args, _options|
         check_for_target(target)
-        check_for_additional_arguments('app-dbconsole', args)
-        govuk_app_command(target, environment, 'dbconsole')
+        check_for_additional_arguments("app-dbconsole", args)
+        govuk_app_command(target, environment, "dbconsole")
       end,
 
-      'rabbitmq' => Proc.new do |target, environment, args, options|
-        check_for_additional_arguments('rabbitmq', args)
+      "rabbitmq" => Proc.new do |target, environment, args, _options|
+        check_for_additional_arguments("rabbitmq", args)
 
-        target ||= 'rabbitmq'
+        target ||= "rabbitmq"
 
         root_password_command = rabbitmq_root_password_command(
           hosting_for_target_and_environment(target, environment),
-          environment
+          environment,
         )
 
         info "You'll need to login as the RabbitMQ #{bold('root')} user."
@@ -950,16 +948,16 @@ class GovukConnect::CLI
         )
       end,
 
-      'sidekiq-monitoring' => Proc.new do |target, environment, args, options|
-        check_for_additional_arguments('sidekiq-monitoring', args)
+      "sidekiq-monitoring" => Proc.new do |target, environment, args, _options|
+        check_for_additional_arguments("sidekiq-monitoring", args)
         ssh(
-          target || 'backend',
+          target || "backend",
           environment,
           port_forward: SIDEKIQ_MONITORING_PORT,
         )
       end,
 
-      'ssh' => Proc.new do |target, environment, args, options|
+      "ssh" => Proc.new do |target, environment, args, options|
         check_for_target(target)
 
         if options.key? :hosting
@@ -972,7 +970,7 @@ class GovukConnect::CLI
           target = {
             hosting: options[:hosting],
             name: name,
-            number: number
+            number: number,
           }
         end
 
@@ -980,16 +978,16 @@ class GovukConnect::CLI
           target,
           environment,
           port_forward: options[:port_forward],
-          additional_arguments: args
+          additional_arguments: args,
         )
-      end
+      end,
     }
   end
 
   def main(argv)
     check_ruby_version_greater_than(required_major: 2, required_minor: 0)
 
-    double_dash_index = argv.index '--'
+    double_dash_index = argv.index "--"
     if double_dash_index
       # This is used in the case of passing extra options to ssh, the --
       # acts as a separator, so to avoid optparse interpreting those
@@ -1012,15 +1010,15 @@ class GovukConnect::CLI
     unless type
       error "error: you must specify the connection type\n"
 
-      STDERR.puts @option_parser.help
+      warn @option_parser.help
 
-      STDERR.puts "\nValid connection types are:\n"
+      warn "\nValid connection types are:\n"
       types.keys.each do |x|
-        STDERR.puts " - #{x}"
+        warn " - #{x}"
       end
       STDERR.puts
-      STDERR.puts "Example commands:"
-      STDERR.puts EXAMPLES
+      warn "Example commands:"
+      warn EXAMPLES
 
       exit 1
     end
@@ -1030,13 +1028,13 @@ class GovukConnect::CLI
     unless handler
       error "error: unknown connection type: #{type}\n"
 
-      STDERR.puts "Valid connection types are:\n"
+      warn "Valid connection types are:\n"
       types.keys.each do |x|
-        STDERR.puts " - #{x}"
+        warn " - #{x}"
       end
       STDERR.puts
-      STDERR.puts "Example commands:"
-      STDERR.puts EXAMPLES
+      warn "Example commands:"
+      warn EXAMPLES
 
       exit 1
     end
@@ -1045,7 +1043,7 @@ class GovukConnect::CLI
 
     unless environment
       error "error: you must specify the environment\n"
-      STDERR.puts @option_parser.help
+      warn @option_parser.help
       exit 1
     end
 

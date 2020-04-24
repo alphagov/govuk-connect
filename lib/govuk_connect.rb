@@ -1,4 +1,4 @@
-require 'govuk_connect/cli'
+require "govuk_connect/cli"
 
 module GovukConnect
   def self.main(argv)
