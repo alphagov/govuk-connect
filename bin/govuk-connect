@@ -5,4 +5,4 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 require 'govuk_connect'
 
-main
+GovukConnect.main(ARGV)
