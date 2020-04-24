@@ -20,6 +20,8 @@ Gem::Specification.new do |s|
   s.homepage = 'https://github.com/alphagov/govuk-connect'
   s.license = 'MIT'
 
-  s.add_development_dependency 'rspec', '~> 3.9'
   s.add_development_dependency 'climate_control'
+  s.add_development_dependency 'rake', '~> 13'
+  s.add_development_dependency 'rspec', '~> 3.9'
+  s.add_development_dependency 'rubocop-govuk', '~> 3.5'
 end
