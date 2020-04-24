@@ -80,13 +80,17 @@ require 'optparse'
 require 'govuk_connect/version'
 
 class GovukConnect::CLI
-  def bold(string)
+  def self.bold(string)
     "\e[1m#{string}\e[0m"
+  end
+
+  def bold(string)
+    self.class.bold(string)
   end
 
   USAGE_BANNER = 'Usage: govuk-connect TYPE TARGET [options]'
 
-  EXAMPLES = <<EXAMPLES
+  EXAMPLES = <<-EXAMPLES
     govuk-connect ssh --environment integration backend
 
     govuk-connect app-console --environment staging publishing-api
@@ -98,7 +102,7 @@ class GovukConnect::CLI
     govuk-connect sidekiq-monitoring -e integration
   EXAMPLES
 
-  MACHINE_TARGET_DESCRIPTION  = <<DOCS
+  MACHINE_TARGET_DESCRIPTION  = <<-DOCS
     The ssh, rabbitmq and sidekiq-monitoring connection types target
     machines.
 
@@ -117,7 +121,7 @@ class GovukConnect::CLI
       govuk-connect ssh -e integration backend#{bold(':2')}
   DOCS
 
-  APP_TARGET_DESCRIPTION = <<DOCS
+  APP_TARGET_DESCRIPTION = <<-DOCS
     The app-console and app-dbconsole connection types target
     applications.
 
@@ -769,7 +773,7 @@ class GovukConnect::CLI
     host_to_hosting_and_environment[uri.host]
   end
 
-  def parse_options
+  def parse_options(argv)
     options = {}
 
     @option_parser = OptionParser.new do |opts|
@@ -801,7 +805,7 @@ class GovukConnect::CLI
         info opts
         newline
         info bold('CONNECTION TYPES')
-        TYPES.keys.each do |x|
+        types.keys.each do |x|
           info "  #{x}"
           description = CONNECTION_TYPE_DESCRIPTIONS[x]
           info "    #{description}" if description
@@ -823,7 +827,7 @@ class GovukConnect::CLI
       end
     end
 
-    @option_parser.parse!
+    @option_parser.parse!(argv)
 
     options
   end
@@ -910,97 +914,99 @@ class GovukConnect::CLI
     end
   end
 
-  TYPES = {
-    'app-console' => Proc.new do |target, environment, args, _options|
-      check_for_target(target)
-      check_for_additional_arguments('app-console', args)
-      govuk_app_command(target, environment, 'console')
-    end,
+  def types
+    @types ||= {
+      'app-console' => Proc.new do |target, environment, args, _options|
+        check_for_target(target)
+        check_for_additional_arguments('app-console', args)
+        govuk_app_command(target, environment, 'console')
+      end,
 
-    'app-dbconsole' => Proc.new do |target, environment, args, _options|
-      check_for_target(target)
-      check_for_additional_arguments('app-dbconsole', args)
-      govuk_app_command(target, environment, 'dbconsole')
-    end,
+      'app-dbconsole' => Proc.new do |target, environment, args, _options|
+        check_for_target(target)
+        check_for_additional_arguments('app-dbconsole', args)
+        govuk_app_command(target, environment, 'dbconsole')
+      end,
 
-    'rabbitmq' => Proc.new do |target, environment, args, options|
-      check_for_additional_arguments('rabbitmq', args)
+      'rabbitmq' => Proc.new do |target, environment, args, options|
+        check_for_additional_arguments('rabbitmq', args)
 
-      target ||= 'rabbitmq'
+        target ||= 'rabbitmq'
 
-      root_password_command = rabbitmq_root_password_command(
-        hosting_for_target_and_environment(target, environment),
-        environment
-      )
+        root_password_command = rabbitmq_root_password_command(
+          hosting_for_target_and_environment(target, environment),
+          environment
+        )
 
-      info "You'll need to login as the RabbitMQ #{bold('root')} user."
-      info "Get the password from govuk-secrets, or example:\n\n"
-      info "  #{bold(root_password_command)}"
-      newline
+        info "You'll need to login as the RabbitMQ #{bold('root')} user."
+        info "Get the password from govuk-secrets, or example:\n\n"
+        info "  #{bold(root_password_command)}"
+        newline
 
-      ssh(
-        target,
-        environment,
-        port_forward: RABBITMQ_PORT,
-      )
-    end,
+        ssh(
+          target,
+          environment,
+          port_forward: RABBITMQ_PORT,
+        )
+      end,
 
-    'sidekiq-monitoring' => Proc.new do |target, environment, args, options|
-      check_for_additional_arguments('sidekiq-monitoring', args)
-      ssh(
-        target || 'backend',
-        environment,
-        port_forward: SIDEKIQ_MONITORING_PORT,
-      )
-    end,
+      'sidekiq-monitoring' => Proc.new do |target, environment, args, options|
+        check_for_additional_arguments('sidekiq-monitoring', args)
+        ssh(
+          target || 'backend',
+          environment,
+          port_forward: SIDEKIQ_MONITORING_PORT,
+        )
+      end,
 
-    'ssh' => Proc.new do |target, environment, args, options|
-      check_for_target(target)
+      'ssh' => Proc.new do |target, environment, args, options|
+        check_for_target(target)
 
-      if options.key? :hosting
-        hosting, name, number = parse_hosting_name_and_number(target)
-        if hosting
-          error "error: hosting specified twice"
-          exit 1
+        if options.key? :hosting
+          hosting, name, number = parse_hosting_name_and_number(target)
+          if hosting
+            error "error: hosting specified twice"
+            exit 1
+          end
+
+          target = {
+            hosting: options[:hosting],
+            name: name,
+            number: number
+          }
         end
 
-        target = {
-          hosting: options[:hosting],
-          name: name,
-          number: number
-        }
+        ssh(
+          target,
+          environment,
+          port_forward: options[:port_forward],
+          additional_arguments: args
+        )
       end
+    }
+  end
 
-      ssh(
-        target,
-        environment,
-        port_forward: options[:port_forward],
-        additional_arguments: args
-      )
-    end
-  }
-
-  def main
+  def main(argv)
     check_ruby_version_greater_than(required_major: 2, required_minor: 0)
 
-    double_dash_index = ARGV.index '--'
+    double_dash_index = argv.index '--'
     if double_dash_index
       # This is used in the case of passing extra options to ssh, the --
       # acts as a separator, so to avoid optparse interpreting those
-      # options, split ARGV around -- before parsing the options
-      rest = ARGV[double_dash_index + 1, ARGV.length]
-      argv = ARGV[0, double_dash_index]
+      # options, split argv around -- before parsing the options
+      rest = argv[double_dash_index + 1, argv.length]
+      argv = argv[0, double_dash_index]
 
-      ARGV.clear
-      ARGV.concat argv
+      argv.clear
+      argv.concat argv
 
-      options = parse_options
+      options = parse_options(argv)
 
-      type, target = ARGV
+      type, target = argv
     else
-      options = parse_options
+      options = parse_options(argv)
 
-      type, target, *rest = ARGV
+      type, target, *rest = argv
     end
 
     unless type
@@ -1009,7 +1015,7 @@ class GovukConnect::CLI
       STDERR.puts @option_parser.help
 
       STDERR.puts "\nValid connection types are:\n"
-      TYPES.keys.each do |x|
+      types.keys.each do |x|
         STDERR.puts " - #{x}"
       end
       STDERR.puts
@@ -1019,13 +1025,13 @@ class GovukConnect::CLI
       exit 1
     end
 
-    handler = TYPES[type]
+    handler = types[type]
 
     unless handler
       error "error: unknown connection type: #{type}\n"
 
       STDERR.puts "Valid connection types are:\n"
-      TYPES.keys.each do |x|
+      types.keys.each do |x|
         STDERR.puts " - #{x}"
       end
       STDERR.puts
