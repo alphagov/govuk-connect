@@ -1,33 +1,16 @@
 RSpec.describe "ssh" do
-  around(:each) do |example|
-    ClimateControl.modify(USER: "test") { example.run }
-  end
+  let(:cli) { GovukConnect::CLI.new }
 
-  it "supports SSHing to a given machine" do
-    cli = GovukConnect::CLI.new
-    allow(cli).to receive(:warn)
-    status = double(:status, success?: true)
+  it "supports SSHing to a class of machines" do
+    stub_govuk_node_list(machine_class: "jumpbox",
+                         hostnames: %w(foo),
+                         environment: :integration)
 
-    allow(Open3).to receive(:capture2).with([
-      "ssh",
-      "-o",
-      "ConnectTimeout=2",
-      "test@jumpbox.integration.publishing.service.gov.uk",
-      "govuk_node_list",
-      "-c",
-      "jumpbox",
-    ].join(" ")).and_return([
-      "foo",
-      status,
-    ])
+    args = ssh_command(environment: :integration,
+                       hostname: "foo")
 
-    expect(cli).to receive(:exec).with(
-      "ssh",
-      "-J",
-      "test@jumpbox.integration.publishing.service.gov.uk",
-      "test@foo",
-    )
-
+    allow(cli).to receive(:exec).with(*args)
     cli.main(["-e", "integration", "ssh", "jumpbox"])
+    expect(cli).to have_received(:exec)
   end
 end
