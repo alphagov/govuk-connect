@@ -10,6 +10,13 @@ RSpec.configure do |config|
 
   config.before :each do
     allow(STDERR).to receive(:puts)
+    disable_ssh_open3_capture2
+  end
+
+  config.around :each do |example|
+    example.run
+  rescue SystemExit => e
+    raise "Unexpected call to exit: #{e.status}"
   end
 
   config.around :each do |example|

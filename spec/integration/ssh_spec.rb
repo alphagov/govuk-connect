@@ -1,6 +1,8 @@
 RSpec.describe "ssh" do
   let(:cli) { GovukConnect::CLI.new }
 
+  before { disable_any_exec(cli) }
+
   it "supports SSHing to a class of machines" do
     stub_govuk_node_list(machine_class: "jumpbox",
                          hostnames: %w(foo),
