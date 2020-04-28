@@ -1,11 +1,11 @@
-RSpec.describe 'ssh' do
+RSpec.describe "ssh" do
   around(:each) do |example|
-    ClimateControl.modify(USER: 'test') { example.run }
+    ClimateControl.modify(USER: "test") { example.run }
   end
 
-  it 'supports SSHing to a given machine' do
+  it "supports SSHing to a given machine" do
     cli = GovukConnect::CLI.new
-    allow(STDERR).to receive(:puts)
+    allow(cli).to receive(:warn)
     status = double(:status, success?: true)
 
     allow(Open3).to receive(:capture2).with([
@@ -15,19 +15,19 @@ RSpec.describe 'ssh' do
       "test@jumpbox.integration.publishing.service.gov.uk",
       "govuk_node_list",
       "-c",
-      "jumpbox"
+      "jumpbox",
     ].join(" ")).and_return([
       "foo",
-      status
+      status,
     ])
 
     expect(cli).to receive(:exec).with(
       "ssh",
       "-J",
       "test@jumpbox.integration.publishing.service.gov.uk",
-      "test@foo"
+      "test@foo",
     )
 
-    cli.main(['-e', 'integration', 'ssh', 'jumpbox'])
+    cli.main(["-e", "integration", "ssh", "jumpbox"])
   end
 end
