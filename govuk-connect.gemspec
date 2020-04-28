@@ -7,7 +7,7 @@ require "govuk_connect/version"
 Gem::Specification.new do |s|
   s.name = "govuk-connect"
   s.version = GovukConnect::VERSION
-  s.required_ruby_version = ">= 2.4.0"
+  s.required_ruby_version = ">= 2.5"
 
   s.summary = "govuk-connect command line tool"
   s.description = "Command line tool to connect to GOV.UK infrastructure"

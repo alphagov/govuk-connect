@@ -70,7 +70,6 @@
 #
 #   govuk-connect sidekiq-monitoring -e integration
 
-
 require "uri"
 require "yaml"
 require "open3"
