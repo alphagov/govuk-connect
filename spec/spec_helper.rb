@@ -9,8 +9,12 @@ RSpec.configure do |config|
   config.include SSHHelper
 
   config.before :each do
-    allow(STDERR).to receive(:puts)
     disable_ssh_open3_capture2
+  end
+
+  config.around :each do |example|
+    # suppress 'warn' messages printed by the CLI
+    expect { example.run }.to output.to_stderr
   end
 
   config.around :each do |example|
