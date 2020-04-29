@@ -20,9 +20,12 @@ module SSHHelper
     ])
   end
 
-  def ssh_command(environment:, hostname:, provider: :aws)
+  def ssh_command(environment:,
+                  hostname:,
+                  provider: :aws,
+                  suffix: [])
     jumpbox = GovukConnect::CLI::JUMPBOXES.dig(environment, provider)
-    ["ssh", "-J", "test@#{jumpbox}", "test@#{hostname}"]
+    ["ssh", "-J", "test@#{jumpbox}", "test@#{hostname}", *suffix]
   end
 
   def disable_any_exec(cli)
@@ -32,7 +35,7 @@ module SSHHelper
   end
 
   def disable_ssh_open3_capture2
-    allow(Open3).to receive(:capture2) do |args|
+    allow(Open3).to receive(:capture2) do |*args|
       raise "Unexpected call to Open3: #{args}"
     end
   end

@@ -24,6 +24,7 @@ RSpec.configure do |config|
   end
 
   config.around :each do |example|
-    ClimateControl.modify(USER: "test") { example.run }
+    args = { USER: "test", HOME: "/home/user" }
+    ClimateControl.modify(**args) { example.run }
   end
 end
