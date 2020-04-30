@@ -171,8 +171,8 @@ class GovukConnect::CLI
     warn message if $verbose
   end
 
-  def newline
-    STDERR.puts
+  def print_empty_line
+    warn ""
   end
 
   def info(message)
@@ -343,7 +343,7 @@ class GovukConnect::CLI
 
     unless status.success?
       error "\nerror: command failed: #{command}"
-      newline
+      print_empty_line
       print_ssh_username_configuration_help
       exit 1
     end
@@ -372,7 +372,7 @@ class GovukConnect::CLI
 
     unless status.success?
       error "error: command failed: #{command}"
-      newline
+      print_empty_line
       print_ssh_username_configuration_help
       exit 1
     end
@@ -459,12 +459,12 @@ class GovukConnect::CLI
 
     if node_classes.length > 1
       error "error: ambiguous node class for #{app_name} in #{environment}"
-      newline
+      print_empty_line
       info "specify the node class and application mame, for example: "
       node_classes.each do |node_class|
         info "\n  govuk-connect app-console -e #{environment} #{node_class}/#{app_name}"
       end
-      newline
+      print_empty_line
 
       exit 1
     else
@@ -503,7 +503,7 @@ class GovukConnect::CLI
         carrenza_node_types.include?(node_type)
 
       error "error: ambiguous hosting for #{node_type} in #{environment}"
-      newline
+      print_empty_line
       info "specify the hosting provider and node type, for example: "
       hosting_providers.each do |hosting_provider|
         info "\n  govuk-connect ssh #{bold(hosting_provider)}/#{node_type}"
@@ -587,7 +587,7 @@ class GovukConnect::CLI
 
     unless node_class
       error "error: application '#{app_name}' not found."
-      newline
+      print_empty_line
 
       application_names = application_names_from_node_class_data(
         environment,
@@ -600,9 +600,9 @@ class GovukConnect::CLI
         similar_application_names.each { |s| info " - #{s}" }
       else
         info "all applications:"
-        newline
+        print_empty_line
         info "  #{application_names.join(', ')}"
-        newline
+        print_empty_line
       end
 
       exit 1
@@ -676,13 +676,13 @@ class GovukConnect::CLI
 
         if number
           unless number.positive?
-            newline
+            print_empty_line
             error "error: invalid machine number '#{number}', it must be > 0"
             exit 1
           end
 
           unless number <= domains.length
-            newline
+            print_empty_line
             error "error: cannot connect to machine number: #{number}"
             exit 1
           end
@@ -800,20 +800,20 @@ class GovukConnect::CLI
 
       opts.on("-h", "--help", "Prints usage information and examples") do
         info opts
-        newline
+        print_empty_line
         info bold("CONNECTION TYPES")
         types.keys.each do |x|
           info "  #{x}"
           description = CONNECTION_TYPE_DESCRIPTIONS[x]
           info "    #{description}" if description
         end
-        newline
+        print_empty_line
         info bold("MACHINE TARGET")
         info MACHINE_TARGET_DESCRIPTION
-        newline
+        print_empty_line
         info bold("APPLICATION TARGET")
         info APP_TARGET_DESCRIPTION
-        newline
+        print_empty_line
         info bold("EXAMPLES")
         info EXAMPLES
         exit
@@ -845,7 +845,7 @@ class GovukConnect::CLI
 
       unless %i[carrenza aws].include? hosting
         error "error: unknown hosting provider: #{hosting}"
-        newline
+        print_empty_line
         info "available hosting providers are:"
         hosting_providers.each { |x| info " - #{x}" }
 
@@ -899,7 +899,7 @@ class GovukConnect::CLI
     unless target
       error "error: you must specify the target\n"
       warn USAGE_BANNER
-      STDERR.puts
+      print_empty_line
       warn EXAMPLES
       exit 1
     end
@@ -939,7 +939,7 @@ class GovukConnect::CLI
         info "You'll need to login as the RabbitMQ #{bold('root')} user."
         info "Get the password from govuk-secrets, or example:\n\n"
         info "  #{bold(root_password_command)}"
-        newline
+        print_empty_line
 
         ssh(
           target,
@@ -1016,7 +1016,7 @@ class GovukConnect::CLI
       types.keys.each do |x|
         warn " - #{x}"
       end
-      STDERR.puts
+      print_empty_line
       warn "Example commands:"
       warn EXAMPLES
 
@@ -1032,7 +1032,7 @@ class GovukConnect::CLI
       types.keys.each do |x|
         warn " - #{x}"
       end
-      STDERR.puts
+      print_empty_line
       warn "Example commands:"
       warn EXAMPLES
 
@@ -1049,7 +1049,7 @@ class GovukConnect::CLI
 
     unless JUMPBOXES.key? environment
       error "error: unknown environment '#{environment}'"
-      newline
+      print_empty_line
       info "Valid environments are:"
       JUMPBOXES.keys.each { |e| info " - #{e}" }
       exit 1
