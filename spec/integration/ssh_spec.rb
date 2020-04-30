@@ -5,7 +5,7 @@ RSpec.describe "ssh" do
 
   it "supports SSHing to a class of machines" do
     stub_govuk_node_list(machine_class: "jumpbox",
-                         hostnames: %w(foo),
+                         hostnames: %w[foo],
                          environment: :integration)
 
     args = ssh_command(environment: :integration,
@@ -27,7 +27,7 @@ RSpec.describe "ssh" do
 
   it "supports SSHing to a specific provider" do
     stub_govuk_node_list(machine_class: "jumpbox",
-                         hostnames: %w(foo),
+                         hostnames: %w[foo],
                          environment: :production,
                          provider: :carrenza)
 
@@ -42,7 +42,7 @@ RSpec.describe "ssh" do
 
   it "supports SSHing to a numbered machine" do
     stub_govuk_node_list(machine_class: "jumpbox",
-                         hostnames: %w(foo1 foo2),
+                         hostnames: %w[foo1 foo2],
                          environment: :integration)
 
     args = ssh_command(environment: :integration,
