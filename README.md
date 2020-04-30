@@ -18,7 +18,7 @@ brew install govuk-connect
 > Note: If you previously installed `govuk-connect` via RubyGems, but
 > switched to using Homebrew, you may have to do the following to get
 > it to work:
-> 
+>
 > ```
 > sudo gem uninstall govuk-connect
 > rbenv rehash
@@ -55,8 +55,10 @@ git tag <version> # eg 0.0.3
 git push origin <version>
 ```
 
-To raise a PR to bump the Homebrew formula version, run:
+Now raise a PR to bump the Homebrew formula version and checksum, which is set in [this file](https://github.com/alphagov/homebrew-gds/blob/master/Formula/govuk-connect.rb)
 
-`brew bump-formula-pr govuk-connect --url=https://rubygems.org/downloads/govuk-connect-<version>.gem --no-fork`
+```bash
+curl https://rubygems.org/downloads/govuk-connect-<version>.gem | sha256sum
+```
 
 PRs to automate any of this process with GitHub Actions are welcome!
