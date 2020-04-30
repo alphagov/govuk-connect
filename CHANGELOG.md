@@ -1,3 +1,7 @@
+# 0.1.0
+
+* Restructure code to support testing ([#10](https://github.com/alphagov/govuk-connect/pull/10), [#16](https://github.com/alphagov/govuk-connect/pull/16))
+
 # 0.0.2
 
 * Fix path to path to govuk directory
