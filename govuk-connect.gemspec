@@ -23,5 +23,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency "climate_control"
   s.add_development_dependency "rake", "~> 13"
   s.add_development_dependency "rspec", "~> 3.9"
-  s.add_development_dependency "rubocop-govuk", "~> 3.5.0"
+  s.add_development_dependency "rubocop-govuk", "~> 3.7.0"
 end
