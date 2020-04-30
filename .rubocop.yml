@@ -4,3 +4,10 @@ inherit_gem:
 
 AllCops:
   TargetRubyVersion: 2.5
+
+# This is necessary because the min version (2.3)
+# falls outside the target versions supported
+# by RuboCop. We should remove this when the min
+# version becomes compatible with RuboCop again.
+Gemspec/RequiredRubyVersion:
+  Enabled: false
