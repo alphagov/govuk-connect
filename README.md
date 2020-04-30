@@ -18,7 +18,7 @@ brew install govuk-connect
 > Note: If you previously installed `govuk-connect` via RubyGems, but
 > switched to using Homebrew, you may have to do the following to get
 > it to work:
-> 
+>
 > ```
 > sudo gem uninstall govuk-connect
 > rbenv rehash
@@ -50,7 +50,7 @@ When you've merged the PR that bumps the version, publish a release tag and the 
 
 ```bash
 gem build govuk-connect
-gem publish govuk-connect-<version>.gem # Credentials are in govuk-secrets/pass/2ndline
+gem publish govuk-connect-<version>.gem # Credentials are in govuk-secrets/pass under packages/rubygems
 git tag <version> # eg 0.0.3
 git push origin <version>
 ```
