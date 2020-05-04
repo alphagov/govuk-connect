@@ -228,7 +228,7 @@ class GovukConnect::CLI
   def ssh_username
     @ssh_username ||= begin
       if File.exist? config_file
-        config_ssh_username = YAML::load_file(config_file)["ssh_username"]
+        config_ssh_username = YAML.load_file(config_file)["ssh_username"]
       end
 
       config_ssh_username || ENV["USER"]
@@ -237,7 +237,7 @@ class GovukConnect::CLI
 
   def ssh_identity_file
     @ssh_identity_file ||= begin
-      YAML::load_file(config_file)["ssh_identity_file"] if File.exist? config_file
+      YAML.load_file(config_file)["ssh_identity_file"] if File.exist? config_file
     end
   end
 
@@ -327,12 +327,12 @@ class GovukConnect::CLI
     hieradata_file = File.join(local_hieradata_root, "#{environment}.yaml")
     log "debug: reading #{hieradata_file}"
 
-    environment_specific_hieradata = YAML::load_file(hieradata_file)
+    environment_specific_hieradata = YAML.load_file(hieradata_file)
 
     if environment_specific_hieradata["node_class"]
       environment_specific_hieradata["node_class"]
     else
-      common_hieradata = YAML::load_file(
+      common_hieradata = YAML.load_file(
         File.join(local_hieradata_root, "common.yaml"),
       )
 
@@ -511,7 +511,7 @@ class GovukConnect::CLI
       app_name,
       environment,
       hosting,
-      )
+    )
 
     unless node_class
       error "error: application '#{app_name}' not found."
@@ -551,11 +551,11 @@ class GovukConnect::CLI
 
   def ssh(
     target,
-        environment,
-        command: false,
-        port_forward: false,
-        additional_arguments: []
-      )
+    environment,
+    command: false,
+    port_forward: false,
+    additional_arguments: []
+  )
     log "debug: ssh to #{target} in #{environment}"
 
     # Split something like aws/backend:2 in to :aws, 'backend', 2
@@ -842,19 +842,19 @@ class GovukConnect::CLI
 
   def types
     @types ||= {
-      "app-console" => Proc.new do |target, environment, args, _options|
+      "app-console" => proc do |target, environment, args, _options|
         check_for_target(target)
         check_for_additional_arguments("app-console", args)
         govuk_app_command(target, environment, "console")
       end,
 
-      "app-dbconsole" => Proc.new do |target, environment, args, _options|
+      "app-dbconsole" => proc do |target, environment, args, _options|
         check_for_target(target)
         check_for_additional_arguments("app-dbconsole", args)
         govuk_app_command(target, environment, "dbconsole")
       end,
 
-      "rabbitmq" => Proc.new do |target, environment, args, _options|
+      "rabbitmq" => proc do |target, environment, args, _options|
         check_for_additional_arguments("rabbitmq", args)
 
         target ||= "rabbitmq"
@@ -876,7 +876,7 @@ class GovukConnect::CLI
         )
       end,
 
-      "sidekiq-monitoring" => Proc.new do |target, environment, args, _options|
+      "sidekiq-monitoring" => proc do |target, environment, args, _options|
         check_for_additional_arguments("sidekiq-monitoring", args)
         ssh(
           target || "backend",
@@ -885,7 +885,7 @@ class GovukConnect::CLI
         )
       end,
 
-      "ssh" => Proc.new do |target, environment, args, options|
+      "ssh" => proc do |target, environment, args, options|
         check_for_target(target)
 
         if options.key? :hosting

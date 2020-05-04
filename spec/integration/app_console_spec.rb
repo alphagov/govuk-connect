@@ -7,13 +7,13 @@ RSpec.describe "app-(db)console" do
   end
 
   it "SSHs and then runs govuk_app_console" do
-    node_classes = { "backend" => { "apps" => %w(my-app) } }
+    node_classes = { "backend" => { "apps" => %w[my-app] } }
 
     stub_puppet_hieradata(environment: :integration,
                           node_classes: node_classes)
 
     stub_govuk_node_list(machine_class: "backend",
-                         hostnames: %w(foo),
+                         hostnames: %w[foo],
                          environment: :integration)
 
     args = ssh_command(environment: :integration,
@@ -26,13 +26,13 @@ RSpec.describe "app-(db)console" do
   end
 
   it "SSHs and then runs govuk_app_dbconsole" do
-    node_classes = { "backend" => { "apps" => %w(my-app) } }
+    node_classes = { "backend" => { "apps" => %w[my-app] } }
 
     stub_puppet_hieradata(environment: :integration,
                           node_classes: node_classes)
 
     stub_govuk_node_list(machine_class: "backend",
-                         hostnames: %w(foo),
+                         hostnames: %w[foo],
                          environment: :integration)
 
     args = ssh_command(environment: :integration,
