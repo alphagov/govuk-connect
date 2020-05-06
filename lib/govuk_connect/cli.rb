@@ -679,14 +679,14 @@ class GovukConnect::CLI
     uri = URI(url)
 
     host_to_hosting_and_environment = {
-     "ci-alert.integration.publishing.service.gov.uk" => %i[carrenza ci],
-     "alert.integration.publishing.service.gov.uk" => %i[aws integration],
-     "alert.staging.govuk.digital" => %i[aws staging],
-     "alert.blue.staging.govuk.digital" => %i[aws staging],
-     "alert.staging.publishing.service.gov.uk" => %i[carrenza staging],
-     "alert.production.govuk.digital" => %i[aws production],
-     "alert.blue.production.govuk.digital" => %i[aws production],
-     "alert.publishing.service.gov.uk" => %i[carrenza production],
+      "ci-alert.integration.publishing.service.gov.uk" => %i[carrenza ci],
+      "alert.integration.publishing.service.gov.uk" => %i[aws integration],
+      "alert.staging.govuk.digital" => %i[aws staging],
+      "alert.blue.staging.govuk.digital" => %i[aws staging],
+      "alert.staging.publishing.service.gov.uk" => %i[carrenza staging],
+      "alert.production.govuk.digital" => %i[aws production],
+      "alert.blue.production.govuk.digital" => %i[aws production],
+      "alert.publishing.service.gov.uk" => %i[carrenza production],
     }
 
     unless host_to_hosting_and_environment.key? uri.host
