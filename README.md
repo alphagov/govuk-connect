@@ -59,4 +59,11 @@ To raise a PR to bump the Homebrew formula version, run:
 
 `brew bump-formula-pr govuk-connect --url=https://rubygems.org/downloads/govuk-connect-<version>.gem --no-fork`
 
-PRs to automate any of this process with GitHub Actions are welcome!
+> If you have problems with this, note that the password Git asks for
+> to push the changes to GitHub is in fact a [Personal Access
+> Token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line).
+> If you get in a real mess, run `brew update-reset`, and try `brew
+> bump-formula-pr` again. If you really can't do it, [consider
+> reopening a previous PR on this
+> topic](https://github.com/alphagov/govuk-connect/pull/21).
+
