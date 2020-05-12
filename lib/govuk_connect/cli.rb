@@ -699,8 +699,6 @@ class GovukConnect::CLI
 
   def parse_options(argv)
     options = {}
-
-    # rubocop:disable Metrics/BlockLength
     @option_parser = OptionParser.new do |opts|
       opts.banner = USAGE_BANNER
 
@@ -751,7 +749,6 @@ class GovukConnect::CLI
         exit
       end
     end
-    # rubocop:enable Metrics/BlockLength
 
     @option_parser.parse!(argv)
 
