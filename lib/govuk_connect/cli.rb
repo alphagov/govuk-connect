@@ -96,7 +96,7 @@ class GovukConnect::CLI
   }.freeze
 
   def log(message)
-    warn message if $verbose
+    warn message if @verbose
   end
 
   def print_empty_line
@@ -125,12 +125,12 @@ class GovukConnect::CLI
       costs[0] = i
       nw = i - 1 # j == 0; nw is lev(i-1, j)
       (1..string2.length).each do |j|
-        costs[j], nw = [
+        costs[j] = [
           costs[j] + 1,
           costs[j - 1] + 1,
           string1[i - 1] == string2[j - 1] ? nw : nw + 1,
-        ].min,
-                       costs[j]
+        ].min
+        nw = costs[j]
       end
     end
     costs[string2.length]
@@ -727,7 +727,7 @@ class GovukConnect::CLI
         options[:port_forward] = o
       end
       opts.on("-v", "--verbose", "Enable more detailed logging") do
-        $verbose = true
+        @verbose = true
       end
 
       opts.on("-h", "--help", "Prints usage information and examples") do
