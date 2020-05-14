@@ -75,7 +75,7 @@ class GovukConnect::CLI
     "sidekiq-monitoring" => "Setup port forwarding to the Sidekiq Monitoring application.",
   }.freeze
 
-  RABBITMQ_PORT = 15672
+  RABBITMQ_PORT = 15_672
   SIDEKIQ_MONITORING_PORT = 3211
 
   JUMPBOXES = {
@@ -126,9 +126,11 @@ class GovukConnect::CLI
       nw = i - 1 # j == 0; nw is lev(i-1, j)
       (1..string2.length).each do |j|
         costs[j], nw = [
-          costs[j] + 1, costs[j - 1] + 1,
-          string1[i - 1] == string2[j - 1] ? nw : nw + 1
-        ].min, costs[j]
+          costs[j] + 1,
+          costs[j - 1] + 1,
+          string1[i - 1] == string2[j - 1] ? nw : nw + 1,
+        ].min,
+                       costs[j]
       end
     end
     costs[string2.length]
@@ -176,7 +178,7 @@ class GovukConnect::CLI
     tries = 0
 
     while tries <= 10
-      port = rand(32768...61000)
+      port = rand(32_768...61_000)
 
       return port if port_free? port
 
@@ -257,13 +259,14 @@ class GovukConnect::CLI
     log "debug: looking up classes in #{hosting}/#{environment}"
     command = [
       "ssh",
-      "-o", "ConnectTimeout=2", # Show a failure quickly
+      "-o",
+      "ConnectTimeout=2", # Show a failure quickly
       *ssh_identity_arguments,
       user_at_host(
         ssh_username,
         jumpbox_for_environment_and_hosting(environment, hosting),
       ),
-      "govuk_node_list --classes"
+      "govuk_node_list --classes",
     ].join(" ")
 
     log "debug: running command: #{command}"
@@ -287,13 +290,14 @@ class GovukConnect::CLI
   def get_domains_for_node_class(target, environment, hosting, ssh_username)
     command = [
       "ssh",
-      "-o", "ConnectTimeout=2", # Show a failure quickly
+      "-o",
+      "ConnectTimeout=2", # Show a failure quickly
       *ssh_identity_arguments,
       user_at_host(
         ssh_username,
         jumpbox_for_environment_and_hosting(environment, hosting),
       ),
-      "govuk_node_list -c #{target}"
+      "govuk_node_list -c #{target}",
     ].join(" ")
 
     output, status = Open3.capture2(command)
@@ -627,14 +631,15 @@ class GovukConnect::CLI
     ssh_command = [
       "ssh",
       *ssh_identity_arguments,
-      "-J", user_at_host(
+      "-J",
+      user_at_host(
         ssh_username,
         jumpbox_for_environment_and_hosting(environment, hosting),
       ),
       user_at_host(
         ssh_username,
         ssh_target,
-      )
+      ),
     ]
 
     if command
@@ -647,7 +652,8 @@ class GovukConnect::CLI
 
       ssh_command += [
         "-N",
-        "-L", "#{localhost_port}:127.0.0.1:#{port_forward}"
+        "-L",
+        "#{localhost_port}:127.0.0.1:#{port_forward}",
       ]
 
       info "Port forwarding setup, access:\n\n  http://127.0.0.1:#{localhost_port}/\n\n"
