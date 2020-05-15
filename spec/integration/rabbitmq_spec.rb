@@ -6,15 +6,19 @@ RSpec.describe "rabbitmq" do
   before { disable_any_exec(cli) }
 
   it "opens an SSH tunnel to RabbitMQ" do
-    stub_socket_port_free(32768)
+    stub_socket_port_free(32_768)
 
-    stub_govuk_node_list(machine_class: "rabbitmq",
-                         hostnames: %w[foo],
-                         environment: :integration)
+    stub_govuk_node_list(
+      machine_class: "rabbitmq",
+      hostnames: %w[foo],
+      environment: :integration,
+    )
 
-    args = ssh_command(environment: :integration,
-                       hostname: "foo",
-                       suffix: %w[-N -L 32768:127.0.0.1:15672])
+    args = ssh_command(
+      environment: :integration,
+      hostname: "foo",
+      suffix: %w[-N -L 32768:127.0.0.1:15672],
+    )
 
     allow(cli).to receive(:exec).with(*args)
     cli.main(["-e", "integration", "rabbitmq"])

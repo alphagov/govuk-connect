@@ -9,16 +9,22 @@ RSpec.describe "app-(db)console" do
   it "SSHs and then runs govuk_app_console" do
     node_classes = { "backend" => { "apps" => %w[my-app] } }
 
-    stub_puppet_hieradata(environment: :integration,
-                          node_classes: node_classes)
+    stub_puppet_hieradata(
+      environment: :integration,
+      node_classes: node_classes,
+    )
 
-    stub_govuk_node_list(machine_class: "backend",
-                         hostnames: %w[foo],
-                         environment: :integration)
+    stub_govuk_node_list(
+      machine_class: "backend",
+      hostnames: %w[foo],
+      environment: :integration,
+    )
 
-    args = ssh_command(environment: :integration,
-                       hostname: "foo",
-                       suffix: ["-t", "govuk_app_console my-app"])
+    args = ssh_command(
+      environment: :integration,
+      hostname: "foo",
+      suffix: ["-t", "govuk_app_console my-app"],
+    )
 
     allow(cli).to receive(:exec).with(*args)
     cli.main(["-e", "integration", "app-console", "my-app"])
@@ -28,16 +34,22 @@ RSpec.describe "app-(db)console" do
   it "SSHs and then runs govuk_app_dbconsole" do
     node_classes = { "backend" => { "apps" => %w[my-app] } }
 
-    stub_puppet_hieradata(environment: :integration,
-                          node_classes: node_classes)
+    stub_puppet_hieradata(
+      environment: :integration,
+      node_classes: node_classes,
+    )
 
-    stub_govuk_node_list(machine_class: "backend",
-                         hostnames: %w[foo],
-                         environment: :integration)
+    stub_govuk_node_list(
+      machine_class: "backend",
+      hostnames: %w[foo],
+      environment: :integration,
+    )
 
-    args = ssh_command(environment: :integration,
-                       hostname: "foo",
-                       suffix: ["-t", "govuk_app_dbconsole my-app"])
+    args = ssh_command(
+      environment: :integration,
+      hostname: "foo",
+      suffix: ["-t", "govuk_app_dbconsole my-app"],
+    )
 
     allow(cli).to receive(:exec).with(*args)
     cli.main(["-e", "integration", "app-dbconsole", "my-app"])
