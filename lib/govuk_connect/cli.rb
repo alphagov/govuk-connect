@@ -79,6 +79,9 @@ class GovukConnect::CLI
   SIDEKIQ_MONITORING_PORT = 3211
 
   JUMPBOXES = {
+    test: {
+      aws: "jumpbox.pink.test.govuk.digital",
+    },
     ci: {
       carrenza: "ci-jumpbox.integration.publishing.service.gov.uk",
     },
