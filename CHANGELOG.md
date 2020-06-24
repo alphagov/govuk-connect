@@ -1,3 +1,7 @@
+# 0.2.0
+
+* Add `test` as an available environment to SSH to ([#36](https://github.com/alphagov/govuk-connect/pull/36))
+
 # 0.1.0
 
 * Restructure code to support testing ([#10](https://github.com/alphagov/govuk-connect/pull/10), [#16](https://github.com/alphagov/govuk-connect/pull/16))
