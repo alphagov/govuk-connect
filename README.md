@@ -50,7 +50,7 @@ When you've merged the PR that bumps the version, publish a release tag and the 
 
 ```bash
 gem build govuk-connect
-gem publish govuk-connect-<version>.gem # Credentials are in govuk-secrets/pass under packages/rubygems
+gem push govuk-connect-<version>.gem # Credentials are in govuk-secrets/pass under packages/rubygems
 git tag <version> # eg 0.0.3
 git push origin <version>
 ```
