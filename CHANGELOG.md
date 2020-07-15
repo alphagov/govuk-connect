@@ -1,4 +1,6 @@
-* Fix parsing of `--` arguments for SSH
+# 0.2.1
+
+* Fix parsing of `--` arguments for SSH ([#39](https://github.com/alphagov/govuk-connect/pull/39))
 
 # 0.2.0
 
