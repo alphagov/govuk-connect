@@ -929,9 +929,6 @@ class GovukConnect::CLI
       rest = argv[double_dash_index + 1, argv.length]
       argv = argv[0, double_dash_index]
 
-      argv.clear
-      argv.concat argv
-
       options = parse_options(argv)
 
       type, target = argv

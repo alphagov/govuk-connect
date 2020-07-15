@@ -1,3 +1,5 @@
+* Fix parsing of `--` arguments for SSH
+
 # 0.2.0
 
 * Add `test` as an available environment to SSH to ([#36](https://github.com/alphagov/govuk-connect/pull/36))
