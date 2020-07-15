@@ -66,4 +66,28 @@ RSpec.describe "ssh" do
     cli.main(["-e", "integration", "ssh", "jumpbox:2"])
     expect(cli).to have_received(:exec)
   end
+
+  it "supports passing extra arguments with --" do
+    args = ssh_command(
+      environment: :integration,
+      hostname: "hostname.internal",
+      suffix: ["ls", "/"],
+    )
+
+    allow(cli).to receive(:exec).with(*args)
+    cli.main(["-e", "integration", "ssh", "hostname.internal", "--", "ls", "/"])
+    expect(cli).to have_received(:exec)
+  end
+
+  it "preserves additional --s" do
+    args = ssh_command(
+      environment: :integration,
+      hostname: "hostname.internal",
+      suffix: ["ls", "--", "/"],
+    )
+
+    allow(cli).to receive(:exec).with(*args)
+    cli.main(["-e", "integration", "ssh", "hostname.internal", "--", "ls", "--", "/"])
+    expect(cli).to have_received(:exec)
+  end
 end
