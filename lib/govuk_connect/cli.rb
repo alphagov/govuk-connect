@@ -20,6 +20,10 @@ class GovukConnect::CLI
   EXAMPLES = <<-EXAMPLES.freeze
     govuk-connect ssh --environment integration backend
 
+    govuk-connect scp-push --environment integration backend filename.txt /tmp/
+
+    govuk-connect scp-pull --environment integration backend /tmp/filename.txt ~/Downloads/
+
     govuk-connect app-console --environment staging publishing-api
 
     govuk-connect app-dbconsole -e integration whitehall_backend/whitehall
@@ -30,7 +34,7 @@ class GovukConnect::CLI
   EXAMPLES
 
   MACHINE_TARGET_DESCRIPTION = <<-DOCS.freeze
-    The ssh, rabbitmq and sidekiq-monitoring connection types target
+    The ssh, scp-*, rabbitmq and sidekiq-monitoring connection types target
     machines.
 
     The machine can be specified by name, for example:
@@ -565,71 +569,7 @@ class GovukConnect::CLI
   )
     log "debug: ssh to #{target} in #{environment}"
 
-    # Split something like aws/backend:2 in to :aws, 'backend', 2
-    hosting, name, number = parse_hosting_name_and_number(target)
-
-    if name.end_with? ".internal"
-      ssh_target = name
-      hosting = :aws
-    elsif name.end_with? ".gov.uk"
-      ssh_target = name
-      hosting = :carrenza
-    else
-      # The hosting might not have been provided, so check if necessary
-      hosting ||= hosting_for_target_and_environment(target, environment)
-
-      domains = get_domains_for_node_class(
-        name,
-        environment,
-        hosting,
-        ssh_username,
-      )
-
-      if domains.length.zero?
-        error "error: couldn't find #{name} in #{hosting}/#{environment}"
-
-        node_types = govuk_node_list_classes(environment, hosting)
-
-        similar_node_types = strings_similar_to(name, node_types)
-
-        if similar_node_types.any?
-          info "\ndid you mean:"
-          similar_node_types.each { |s| info " - #{s}" }
-        else
-          info "\nall node types:"
-          node_types.each { |s| info " - #{s}" }
-        end
-
-        exit 1
-      elsif domains.length == 1
-        ssh_target = domains.first
-
-        info "There is #{bold('one machine')} to connect to"
-      else
-        n_machines = bold("#{domains.length} machines")
-        info "There are #{n_machines} of this class"
-
-        if number
-          unless number.positive?
-            print_empty_line
-            error "error: invalid machine number '#{number}', it must be > 0"
-            exit 1
-          end
-
-          unless number <= domains.length
-            print_empty_line
-            error "error: cannot connect to machine number: #{number}"
-            exit 1
-          end
-
-          ssh_target = domains[number - 1]
-          info "Connecting to number #{number}"
-        else
-          ssh_target = domains.sample
-          info "Connecting to a random machine (number #{domains.find_index(ssh_target) + 1})"
-        end
-      end
-    end
+    target, hosting = ssh_target(target, environment)
 
     ssh_command = [
       "ssh",
@@ -641,7 +581,7 @@ class GovukConnect::CLI
       ),
       user_at_host(
         ssh_username,
-        ssh_target,
+        target,
       ),
     ]
 
@@ -667,6 +607,44 @@ class GovukConnect::CLI
     info "\n#{bold('Running command:')} #{ssh_command.join(' ')}\n\n"
 
     exec(*ssh_command)
+  end
+
+  def scp(
+    target,
+    environment,
+    files,
+    push: false,
+    additional_arguments: []
+  )
+    log "debug: scp #{push ? 'push' : 'pull'} to #{target} in #{environment}"
+
+    target, hosting = ssh_target(target, environment)
+
+    sources = files[0, files.length - 1]
+    destination = files[-1]
+
+    if push
+      destination = "#{target}:#{destination}"
+    else
+      sources = sources.map { |source| "#{target}:#{source}" }
+    end
+
+    scp_command = [
+      "scp",
+      *ssh_identity_arguments,
+      "-o",
+      "ProxyJump=#{user_at_host(ssh_username, jumpbox_for_environment_and_hosting(environment, hosting))}",
+      "-o",
+      "User=#{ssh_username}",
+      *additional_arguments,
+      "--",
+      *sources,
+      destination,
+    ]
+
+    info "\n#{bold('Running command:')} #{scp_command.join(' ')}\n\n"
+
+    exec(*scp_command)
   end
 
   def rabbitmq_root_password_command(hosting, environment)
@@ -829,6 +807,94 @@ class GovukConnect::CLI
     [node_class, app_name, number]
   end
 
+  def target_from_options(target, options)
+    if options.key? :hosting
+      hosting, name, number = parse_hosting_name_and_number(target)
+      if hosting
+        error "error: hosting specified twice"
+        exit 1
+      end
+
+      {
+        hosting: options[:hosting],
+        name: name,
+        number: number,
+      }
+    else
+      target
+    end
+  end
+
+  def ssh_target(target, environment)
+    # Split something like aws/backend:2 in to :aws, 'backend', 2
+    hosting, name, number = parse_hosting_name_and_number(target)
+
+    if name.end_with? ".internal"
+      target = name
+      hosting = :aws
+    elsif name.end_with? ".gov.uk"
+      target = name
+      hosting = :carrenza
+    else
+      # The hosting might not have been provided, so check if necessary
+      hosting ||= hosting_for_target_and_environment(target, environment)
+
+      domains = get_domains_for_node_class(
+        name,
+        environment,
+        hosting,
+        ssh_username,
+      )
+
+      if domains.length.zero?
+        error "error: couldn't find #{name} in #{hosting}/#{environment}"
+
+        node_types = govuk_node_list_classes(environment, hosting)
+
+        similar_node_types = strings_similar_to(name, node_types)
+
+        if similar_node_types.any?
+          info "\ndid you mean:"
+          similar_node_types.each { |s| info " - #{s}" }
+        else
+          info "\nall node types:"
+          node_types.each { |s| info " - #{s}" }
+        end
+
+        exit 1
+      elsif domains.length == 1
+        target = domains.first
+
+        info "There is #{bold('one machine')} to connect to"
+      else
+        n_machines = bold("#{domains.length} machines")
+        info "There are #{n_machines} of this class"
+
+        if number
+          unless number.positive?
+            print_empty_line
+            error "error: invalid machine number '#{number}', it must be > 0"
+            exit 1
+          end
+
+          unless number <= domains.length
+            print_empty_line
+            error "error: cannot connect to machine number: #{number}"
+            exit 1
+          end
+
+          target = domains[number - 1]
+          info "Connecting to number #{number}"
+        else
+          target = domains.sample
+          info "Connecting to a random machine (number #{domains.find_index(target) + 1})"
+        end
+      end
+    end
+
+    [target, hosting]
+  end
+
   def check_for_target(target)
     unless target
       error "error: you must specify the target\n"
@@ -848,20 +914,23 @@ class GovukConnect::CLI
 
   def types
     @types ||= {
-      "app-console" => proc do |target, environment, args, _options|
+      "app-console" => proc do |target, environment, args, extra_args, _options|
         check_for_target(target)
         check_for_additional_arguments("app-console", args)
+        check_for_additional_arguments("app-console", extra_args)
         govuk_app_command(target, environment, "console")
       end,
 
-      "app-dbconsole" => proc do |target, environment, args, _options|
+      "app-dbconsole" => proc do |target, environment, args, extra_args, _options|
         check_for_target(target)
         check_for_additional_arguments("app-dbconsole", args)
+        check_for_additional_arguments("app-dbconsole", extra_args)
         govuk_app_command(target, environment, "dbconsole")
       end,
 
-      "rabbitmq" => proc do |target, environment, args, _options|
+      "rabbitmq" => proc do |target, environment, args, extra_args, _options|
         check_for_additional_arguments("rabbitmq", args)
+        check_for_additional_arguments("rabbitmq", extra_args)
 
         target ||= "rabbitmq"
 
@@ -882,8 +951,9 @@ class GovukConnect::CLI
         )
       end,
 
-      "sidekiq-monitoring" => proc do |target, environment, args, _options|
+      "sidekiq-monitoring" => proc do |target, environment, args, extra_args, _options|
         check_for_additional_arguments("sidekiq-monitoring", args)
+        check_for_additional_arguments("sidekiq-monitoring", extra_args)
         ssh(
           target || "backend",
           environment,
@@ -891,28 +961,50 @@ class GovukConnect::CLI
         )
       end,
 
-      "ssh" => proc do |target, environment, args, options|
+      "ssh" => proc do |target, environment, args, extra_args, options|
         check_for_target(target)
-
-        if options.key? :hosting
-          hosting, name, number = parse_hosting_name_and_number(target)
-          if hosting
-            error "error: hosting specified twice"
-            exit 1
-          end
-
-          target = {
-            hosting: options[:hosting],
-            name: name,
-            number: number,
-          }
-        end
+        target = target_from_options(target, options)
 
         ssh(
           target,
           environment,
           port_forward: options[:port_forward],
-          additional_arguments: args,
+          additional_arguments: [args, extra_args].flatten,
+        )
+      end,
+
+      "scp-pull" => proc do |target, environment, args, extra_args, options|
+        check_for_target(target)
+        target = target_from_options(target, options)
+
+        if args.length < 2
+          error "error: need at least two filenames"
+          exit 1
+        end
+
+        scp(
+          target,
+          environment,
+          args,
+          additional_arguments: extra_args,
+        )
+      end,
+
+      "scp-push" => proc do |target, environment, args, extra_args, options|
+        check_for_target(target)
+        target = target_from_options(target, options)
+
+        if args.length < 2
+          error "error: need at least two filenames"
+          exit 1
+        end
+
+        scp(
+          target,
+          environment,
+          args,
+          push: true,
+          additional_arguments: extra_args,
         )
       end,
     }
@@ -921,22 +1013,20 @@ class GovukConnect::CLI
   def main(argv)
     check_ruby_version_greater_than(required_major: 2, required_minor: 0)
 
+    extra_arguments_after_double_dash = []
+
     double_dash_index = argv.index "--"
     if double_dash_index
-      # This is used in the case of passing extra options to ssh, the --
-      # acts as a separator, so to avoid optparse interpreting those
-      # options, split argv around -- before parsing the options
-      rest = argv[double_dash_index + 1, argv.length]
+      # This is used in the case of passing extra options to ssh and
+      # scp, the -- acts as a separator, so to avoid optparse
+      # interpreting those as options, split argv around -- before
+      # parsing the options
+      extra_arguments_after_double_dash = argv[double_dash_index + 1, argv.length]
       argv = argv[0, double_dash_index]
-
-      options = parse_options(argv)
-
-      type, target = argv
-    else
-      options = parse_options(argv)
-
-      type, target, *rest = argv
     end
+
+    govuk_connect_options = parse_options(argv)
+    type, target, *extra_arguments_before_double_dash = argv
 
     unless type
       error "error: you must specify the connection type\n"
@@ -970,7 +1060,7 @@ class GovukConnect::CLI
       exit 1
     end
 
-    environment = options[:environment]&.to_sym
+    environment = govuk_connect_options[:environment]&.to_sym
 
     unless environment
       error "error: you must specify the environment\n"
@@ -986,7 +1076,13 @@ class GovukConnect::CLI
       exit 1
     end
 
-    handler.call(target, environment, rest, options)
+    handler.call(
+      target,
+      environment,
+      extra_arguments_before_double_dash,
+      extra_arguments_after_double_dash,
+      govuk_connect_options,
+    )
   rescue Interrupt
     # Handle SIGTERM without printing a stacktrace
     exit 1
