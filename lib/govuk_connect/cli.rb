@@ -20,6 +20,10 @@ class GovukConnect::CLI
   EXAMPLES = <<-EXAMPLES.freeze
     govuk-connect ssh --environment integration backend
 
+    govuk-connect scp-push --environment integration backend filename.txt /tmp/
+
+    govuk-connect scp-pull --environment integration backend /tmp/filename.txt ~/Downloads/
+
     govuk-connect app-console --environment staging publishing-api
 
     govuk-connect app-dbconsole -e integration whitehall_backend/whitehall
@@ -30,7 +34,7 @@ class GovukConnect::CLI
   EXAMPLES
 
   MACHINE_TARGET_DESCRIPTION = <<-DOCS.freeze
-    The ssh, rabbitmq and sidekiq-monitoring connection types target
+    The ssh, scp-*, rabbitmq and sidekiq-monitoring connection types target
     machines.
 
     The machine can be specified by name, for example:
@@ -605,6 +609,44 @@ class GovukConnect::CLI
     exec(*ssh_command)
   end
 
+  def scp(
+    target,
+    environment,
+    files,
+    push: false,
+    additional_arguments: []
+  )
+    log "debug: scp #{push ? 'push' : 'pull'} to #{target} in #{environment}"
+
+    target, hosting = ssh_target(target, environment)
+
+    sources = files[0, files.length - 1]
+    destination = files[-1]
+
+    if push
+      destination = "#{target}:#{destination}"
+    else
+      sources = sources.map { |source| "#{target}:#{source}" }
+    end
+
+    scp_command = [
+      "scp",
+      *ssh_identity_arguments,
+      "-o",
+      "ProxyJump=#{user_at_host(ssh_username, jumpbox_for_environment_and_hosting(environment, hosting))}",
+      "-o",
+      "User=#{ssh_username}",
+      *additional_arguments,
+      "--",
+      *sources,
+      destination,
+    ]
+
+    info "\n#{bold('Running command:')} #{scp_command.join(' ')}\n\n"
+
+    exec(*scp_command)
+  end
+
   def rabbitmq_root_password_command(hosting, environment)
     hieradata_directory = {
       aws: "puppet_aws",
@@ -928,6 +970,41 @@ class GovukConnect::CLI
           environment,
           port_forward: options[:port_forward],
           additional_arguments: [args, extra_args].flatten,
+        )
+      end,
+
+      "scp-pull" => proc do |target, environment, args, extra_args, options|
+        check_for_target(target)
+        target = target_from_options(target, options)
+
+        if args.length < 2
+          error "error: need at least two filenames"
+          exit 1
+        end
+
+        scp(
+          target,
+          environment,
+          args,
+          additional_arguments: extra_args,
+        )
+      end,
+
+      "scp-push" => proc do |target, environment, args, extra_args, options|
+        check_for_target(target)
+        target = target_from_options(target, options)
+
+        if args.length < 2
+          error "error: need at least two filenames"
+          exit 1
+        end
+
+        scp(
+          target,
+          environment,
+          args,
+          push: true,
+          additional_arguments: extra_args,
         )
       end,
     }

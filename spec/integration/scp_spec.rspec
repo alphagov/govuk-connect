@@ -1,0 +1,65 @@
+RSpec.describe "scp" do
+  include SCPHelper
+
+  let(:cli) { GovukConnect::CLI.new }
+
+  before { disable_any_exec(cli) }
+
+  it "supports SCPing to a numbered machine" do
+    stub_govuk_node_list(
+      machine_class: "jumpbox",
+      hostnames: %w[foo1 foo2],
+      environment: :integration,
+    )
+
+    args = scp_push_command(
+      environment: :integration,
+      hostname: "foo2",
+      sources: %w[file1 file2],
+      destination: "file3",
+    )
+
+    allow(cli).to receive(:exec).with(*args)
+    cli.main(["-e", "integration", "scp-push", "jumpbox:2", "file1", "file2", "file3"])
+    expect(cli).to have_received(:exec)
+  end
+
+  it "supports SCPing from a numbered machine" do
+    stub_govuk_node_list(
+      machine_class: "jumpbox",
+      hostnames: %w[foo1 foo2],
+      environment: :integration,
+    )
+
+    args = scp_pull_command(
+      environment: :integration,
+      hostname: "foo2",
+      sources: %w[file1 file2],
+      destination: "file3",
+    )
+
+    allow(cli).to receive(:exec).with(*args)
+    cli.main(["-e", "integration", "scp-pull", "jumpbox:2", "file1", "file2", "file3"])
+    expect(cli).to have_received(:exec)
+  end
+
+  it "supports passing extra arguments with --" do
+    stub_govuk_node_list(
+      machine_class: "jumpbox",
+      hostnames: %w[foo1 foo2],
+      environment: :integration,
+    )
+
+    args = scp_pull_command(
+      environment: :integration,
+      hostname: "foo2",
+      sources: %w[file1 file2],
+      destination: "file3",
+      additional_arguments: %w[-o SomeSCPOption=foo],
+    )
+
+    allow(cli).to receive(:exec).with(*args)
+    cli.main(["-e", "integration", "scp-pull", "jumpbox:2", "file1", "file2", "file3", "--", "-o", "SomeSCPOption=foo"])
+    expect(cli).to have_received(:exec)
+  end
+end

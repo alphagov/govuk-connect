@@ -1,3 +1,5 @@
+* Add `scp-push` and `scp-pull` command to copy files between machines ([#41](https://github.com/alphagov/govuk-connect/pull/41))
+
 # 0.2.1
 
 * Fix parsing of `--` arguments for SSH ([#39](https://github.com/alphagov/govuk-connect/pull/39))
