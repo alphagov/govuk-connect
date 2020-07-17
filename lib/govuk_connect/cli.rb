@@ -565,71 +565,7 @@ class GovukConnect::CLI
   )
     log "debug: ssh to #{target} in #{environment}"
 
-    # Split something like aws/backend:2 in to :aws, 'backend', 2
-    hosting, name, number = parse_hosting_name_and_number(target)
-
-    if name.end_with? ".internal"
-      ssh_target = name
-      hosting = :aws
-    elsif name.end_with? ".gov.uk"
-      ssh_target = name
-      hosting = :carrenza
-    else
-      # The hosting might not have been provided, so check if necessary
-      hosting ||= hosting_for_target_and_environment(target, environment)
-
-      domains = get_domains_for_node_class(
-        name,
-        environment,
-        hosting,
-        ssh_username,
-      )
-
-      if domains.length.zero?
-        error "error: couldn't find #{name} in #{hosting}/#{environment}"
-
-        node_types = govuk_node_list_classes(environment, hosting)
-
-        similar_node_types = strings_similar_to(name, node_types)
-
-        if similar_node_types.any?
-          info "\ndid you mean:"
-          similar_node_types.each { |s| info " - #{s}" }
-        else
-          info "\nall node types:"
-          node_types.each { |s| info " - #{s}" }
-        end
-
-        exit 1
-      elsif domains.length == 1
-        ssh_target = domains.first
-
-        info "There is #{bold('one machine')} to connect to"
-      else
-        n_machines = bold("#{domains.length} machines")
-        info "There are #{n_machines} of this class"
-
-        if number
-          unless number.positive?
-            print_empty_line
-            error "error: invalid machine number '#{number}', it must be > 0"
-            exit 1
-          end
-
-          unless number <= domains.length
-            print_empty_line
-            error "error: cannot connect to machine number: #{number}"
-            exit 1
-          end
-
-          ssh_target = domains[number - 1]
-          info "Connecting to number #{number}"
-        else
-          ssh_target = domains.sample
-          info "Connecting to a random machine (number #{domains.find_index(ssh_target) + 1})"
-        end
-      end
-    end
+    target, hosting = ssh_target(target, environment)
 
     ssh_command = [
       "ssh",
@@ -641,7 +577,7 @@ class GovukConnect::CLI
       ),
       user_at_host(
         ssh_username,
-        ssh_target,
+        target,
       ),
     ]
 
@@ -829,6 +765,94 @@ class GovukConnect::CLI
     [node_class, app_name, number]
   end
 
+  def target_from_options(target, options)
+    if options.key? :hosting
+      hosting, name, number = parse_hosting_name_and_number(target)
+      if hosting
+        error "error: hosting specified twice"
+        exit 1
+      end
+
+      {
+        hosting: options[:hosting],
+        name: name,
+        number: number,
+      }
+    else
+      target
+    end
+  end
+
+  def ssh_target(target, environment)
+    # Split something like aws/backend:2 in to :aws, 'backend', 2
+    hosting, name, number = parse_hosting_name_and_number(target)
+
+    if name.end_with? ".internal"
+      target = name
+      hosting = :aws
+    elsif name.end_with? ".gov.uk"
+      target = name
+      hosting = :carrenza
+    else
+      # The hosting might not have been provided, so check if necessary
+      hosting ||= hosting_for_target_and_environment(target, environment)
+
+      domains = get_domains_for_node_class(
+        name,
+        environment,
+        hosting,
+        ssh_username,
+      )
+
+      if domains.length.zero?
+        error "error: couldn't find #{name} in #{hosting}/#{environment}"
+
+        node_types = govuk_node_list_classes(environment, hosting)
+
+        similar_node_types = strings_similar_to(name, node_types)
+
+        if similar_node_types.any?
+          info "\ndid you mean:"
+          similar_node_types.each { |s| info " - #{s}" }
+        else
+          info "\nall node types:"
+          node_types.each { |s| info " - #{s}" }
+        end
+
+        exit 1
+      elsif domains.length == 1
+        target = domains.first
+
+        info "There is #{bold('one machine')} to connect to"
+      else
+        n_machines = bold("#{domains.length} machines")
+        info "There are #{n_machines} of this class"
+
+        if number
+          unless number.positive?
+            print_empty_line
+            error "error: invalid machine number '#{number}', it must be > 0"
+            exit 1
+          end
+
+          unless number <= domains.length
+            print_empty_line
+            error "error: cannot connect to machine number: #{number}"
+            exit 1
+          end
+
+          target = domains[number - 1]
+          info "Connecting to number #{number}"
+        else
+          target = domains.sample
+          info "Connecting to a random machine (number #{domains.find_index(target) + 1})"
+        end
+      end
+    end
+
+    [target, hosting]
+  end
+
   def check_for_target(target)
     unless target
       error "error: you must specify the target\n"
@@ -893,20 +917,7 @@ class GovukConnect::CLI
 
       "ssh" => proc do |target, environment, args, options|
         check_for_target(target)
-
-        if options.key? :hosting
-          hosting, name, number = parse_hosting_name_and_number(target)
-          if hosting
-            error "error: hosting specified twice"
-            exit 1
-          end
-
-          target = {
-            hosting: options[:hosting],
-            name: name,
-            number: number,
-          }
-        end
+        target = target_from_options(target, options)
 
         ssh(
           target,
