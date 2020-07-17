@@ -1,3 +1,5 @@
+# 0.3.0
+
 * Add `scp-push` and `scp-pull` command to copy files between machines ([#41](https://github.com/alphagov/govuk-connect/pull/41))
 
 # 0.2.1
