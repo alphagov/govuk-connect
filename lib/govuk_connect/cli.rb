@@ -263,6 +263,24 @@ class GovukConnect::CLI
 
   def govuk_node_list_classes(environment, hosting)
     log "debug: looking up classes in #{hosting}/#{environment}"
+    classes = ssh_capture("govuk_node_list --classes").sort
+
+    log "debug: classes:"
+    classes.each { |c| log " - #{c}" }
+
+    classes
+  end
+
+  def get_domains_for_node_class(target, environment, hosting)
+    domains = ssh_capture(environment, hosting, "govuk_node_list -c #{target}")
+    if hosting == :aws
+      domains
+    else
+      domains.sort
+    end
+  end
+
+  def ssh_capture(environment, hosting, remote_command)
     command = [
       "ssh",
       "-o",
@@ -272,7 +290,7 @@ class GovukConnect::CLI
         ssh_username,
         jumpbox_for_environment_and_hosting(environment, hosting),
       ),
-      "govuk_node_list --classes",
+      remote_command,
     ].join(" ")
 
     log "debug: running command: #{command}"
@@ -285,41 +303,7 @@ class GovukConnect::CLI
       exit 1
     end
 
-    classes = output.split("\n").sort
-
-    log "debug: classes:"
-    classes.each { |c| log " - #{c}" }
-
-    classes
-  end
-
-  def get_domains_for_node_class(target, environment, hosting)
-    command = [
-      "ssh",
-      "-o",
-      "ConnectTimeout=2", # Show a failure quickly
-      *ssh_identity_arguments,
-      user_at_host(
-        ssh_username,
-        jumpbox_for_environment_and_hosting(environment, hosting),
-      ),
-      "govuk_node_list -c #{target}",
-    ].join(" ")
-
-    output, status = Open3.capture2(command)
-
-    unless status.success?
-      error "error: command failed: #{command}"
-      print_empty_line
-      print_ssh_username_configuration_help
-      exit 1
-    end
-
-    if hosting == :aws
-      output.split("\n")
-    else
-      output.split("\n").sort
-    end
+    output.split("\n")
   end
 
   def govuk_directory
