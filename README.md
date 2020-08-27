@@ -46,7 +46,8 @@ Whichever installation method you choose, you can use the above method or the st
 
 ## Releases
 
-When you've merged the PR that bumps the version, publish a release tag and the gem to RubyGems from the `master` branch:
+When you've merged the PR that bumps the version (change value in `lib/govuk_connect/version.rb`), 
+publish a release tag and the gem to RubyGems from the `master` branch:
 
 ```bash
 gem build govuk-connect
