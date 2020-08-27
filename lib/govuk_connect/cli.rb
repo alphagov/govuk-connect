@@ -316,7 +316,11 @@ class GovukConnect::CLI
       exit 1
     end
 
-    output.split("\n").sort
+    if hosting == :aws
+      output.split("\n")
+    else
+      output.split("\n").sort
+    end
   end
 
   def govuk_directory
