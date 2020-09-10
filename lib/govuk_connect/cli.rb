@@ -15,22 +15,22 @@ class GovukConnect::CLI
     self.class.bold(string)
   end
 
-  USAGE_BANNER = "Usage: govuk-connect TYPE TARGET [options]".freeze
+  USAGE_BANNER = "Usage: gds govuk connect TYPE TARGET [options]".freeze
 
   EXAMPLES = <<-EXAMPLES.freeze
-    govuk-connect ssh --environment integration backend
+    gds govuk connect ssh --environment integration backend
 
-    govuk-connect scp-push --environment integration backend filename.txt /tmp/
+    gds govuk connect scp-push --environment integration backend filename.txt /tmp/
 
-    govuk-connect scp-pull --environment integration backend /tmp/filename.txt ~/Downloads/
+    gds govuk connect scp-pull --environment integration backend /tmp/filename.txt ~/Downloads/
 
-    govuk-connect app-console --environment staging publishing-api
+    gds govuk connect app-console --environment staging publishing-api
 
-    govuk-connect app-dbconsole -e integration whitehall_backend/whitehall
+    gds govuk connect app-dbconsole -e integration whitehall_backend/whitehall
 
-    govuk-connect rabbitmq -e staging aws/rabbitmq
+    gds govuk connect rabbitmq -e staging aws/rabbitmq
 
-    govuk-connect sidekiq-monitoring -e integration
+    gds govuk connect sidekiq-monitoring -e integration
   EXAMPLES
 
   MACHINE_TARGET_DESCRIPTION = <<-DOCS.freeze
@@ -39,17 +39,17 @@ class GovukConnect::CLI
 
     The machine can be specified by name, for example:
 
-      govuk-connect ssh -e integration #{bold('backend')}
+      gds govuk connect ssh -e integration #{bold('backend')}
 
     If the hosting provider is ambiguous, you'll need to specify it prior
     to the name, for example:
 
-      govuk-connect ssh -e staging #{bold('aws/')}backend
+      gds govuk connect ssh -e staging #{bold('aws/')}backend
 
     If you want to connect to a specific machine, you can specify a number
     after the name, for example:
 
-      govuk-connect ssh -e integration backend#{bold(':2')}
+      gds govuk connect ssh -e integration backend#{bold(':2')}
   DOCS
 
   APP_TARGET_DESCRIPTION = <<-DOCS.freeze
@@ -58,17 +58,17 @@ class GovukConnect::CLI
 
     The application is specified by name, for example:
 
-      govuk-connect app-console -e integration #{bold('publishing-api')}
+      gds govuk connect app-console -e integration #{bold('publishing-api')}
 
     If the node class is ambiguous, you'll need to specify it prior to
     the name, for example:
 
-      govuk-connect app-console -e integration #{bold('whitehall_backend/')}whitehall
+      gds govuk connect app-console -e integration #{bold('whitehall_backend/')}whitehall
 
     If you want to connect to a specific machine, you can specify a
     number after the name, for example:
 
-      govuk-connect app-console -e integration publishing-api#{bold(':2')}
+      gds govuk connect app-console -e integration publishing-api#{bold(':2')}
   DOCS
 
   CONNECTION_TYPE_DESCRIPTIONS = {
@@ -405,7 +405,7 @@ class GovukConnect::CLI
       print_empty_line
       info "specify the node class and application mame, for example: "
       node_classes.each do |node_class|
-        info "\n  govuk-connect app-console -e #{environment} #{node_class}/#{app_name}"
+        info "\n  gds govuk connect app-console -e #{environment} #{node_class}/#{app_name}"
       end
       print_empty_line
 
@@ -449,7 +449,7 @@ class GovukConnect::CLI
       print_empty_line
       info "specify the hosting provider and node type, for example: "
       hosting_providers.each do |hosting_provider|
-        info "\n  govuk-connect ssh #{bold(hosting_provider)}/#{node_type}"
+        info "\n  gds govuk connect ssh #{bold(hosting_provider)}/#{node_type}"
       end
       info "\n"
 
@@ -715,8 +715,11 @@ class GovukConnect::CLI
         @verbose = true
       end
 
-      opts.on("-h", "--help", "Prints usage information and examples") do
+      opts.on("-h", "--help", "Prints usage examples and information") do
         info opts
+        print_empty_line
+        info bold("EXAMPLES")
+        info EXAMPLES
         print_empty_line
         info bold("CONNECTION TYPES")
         types.keys.each do |x|
@@ -730,9 +733,6 @@ class GovukConnect::CLI
         print_empty_line
         info bold("APPLICATION TARGET")
         info APP_TARGET_DESCRIPTION
-        print_empty_line
-        info bold("EXAMPLES")
-        info EXAMPLES
         exit
       end
       opts.on("-V", "--version", "Prints version information") do
