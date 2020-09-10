@@ -715,8 +715,11 @@ class GovukConnect::CLI
         @verbose = true
       end
 
-      opts.on("-h", "--help", "Prints usage information and examples") do
+      opts.on("-h", "--help", "Prints usage examples and information") do
         info opts
+        print_empty_line
+        info bold("EXAMPLES")
+        info EXAMPLES
         print_empty_line
         info bold("CONNECTION TYPES")
         types.keys.each do |x|
@@ -730,9 +733,6 @@ class GovukConnect::CLI
         print_empty_line
         info bold("APPLICATION TARGET")
         info APP_TARGET_DESCRIPTION
-        print_empty_line
-        info bold("EXAMPLES")
-        info EXAMPLES
         exit
       end
       opts.on("-V", "--version", "Prints version information") do
