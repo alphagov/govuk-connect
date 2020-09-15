@@ -1,3 +1,7 @@
+# 0.4.0
+
+* Remove carrenza staging ([#51](https://github.com/alphagov/govuk-connect/pull/51))
+
 # 0.3.3
 
 * Improve the `--help` text to match what users run on a day-to-day basis ([#49](https://github.com/alphagov/govuk-connect/pull/49))
