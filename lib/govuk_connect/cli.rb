@@ -93,7 +93,6 @@ class GovukConnect::CLI
       aws: "jumpbox.integration.publishing.service.gov.uk",
     },
     staging: {
-      carrenza: "jumpbox.staging.publishing.service.gov.uk",
       aws: "jumpbox.staging.govuk.digital",
     },
     production: {
