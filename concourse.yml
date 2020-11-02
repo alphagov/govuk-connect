@@ -1,0 +1,42 @@
+jobs:
+- name: update-pipeline
+  plan:
+    - get: govuk-connect
+      trigger: true
+    - set_pipeline: govuk-connect
+      file: govuk-connect/concourse.yml
+- name: release-gem
+  plan:
+  - get: govuk-connect
+    trigger: true
+  - config:
+      container_limits: {}
+      image_resource:
+        source:
+          repository: ruby
+          tag: 2.6
+          username: ((docker_hub_username))
+          password: ((docker_hub_authtoken))
+        type: registry-image
+      inputs:
+      - name: govuk-connect
+      outputs:
+      - name: gems
+        path: dist
+      platform: linux
+      run:
+        args:
+        - -c
+        - |
+          echo "=== Building Gem..."
+          cd govuk-connect
+          mkdir dist
+          gem build govuk-connect.gemspec --output dist/release.gem
+        path: /bin/bash
+    task: build-gem
+resources:
+- icon: github-circle
+  name: govuk-connect
+  source:
+    uri: https://github.com/alphagov/govuk-connect
+  type: git
