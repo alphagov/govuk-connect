@@ -1,3 +1,7 @@
+# Unreleased
+
+* Remove support for sidekiq-monitoring ([#54](https://github.com/alphagov/govuk-connect/pull/54))
+
 # 0.4.0
 
 * Remove carrenza staging ([#51](https://github.com/alphagov/govuk-connect/pull/51))

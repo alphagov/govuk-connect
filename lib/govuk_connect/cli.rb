@@ -29,13 +29,10 @@ class GovukConnect::CLI
     gds govuk connect app-dbconsole -e integration whitehall_backend/whitehall
 
     gds govuk connect rabbitmq -e staging aws/rabbitmq
-
-    gds govuk connect sidekiq-monitoring -e integration
   EXAMPLES
 
   MACHINE_TARGET_DESCRIPTION = <<-DOCS.freeze
-    The ssh, scp-*, rabbitmq and sidekiq-monitoring connection types target
-    machines.
+    The ssh, scp-*, rabbitmq connection types target machines.
 
     The machine can be specified by name, for example:
 
@@ -76,11 +73,9 @@ class GovukConnect::CLI
     "app-console" => "Launch a console for an application.  For example, a rails console when connecting to a Rails application.",
     "app-dbconsole" => "Launch a console for the database for an application.",
     "rabbitmq" => "Setup port forwarding to the RabbitMQ admin interface.",
-    "sidekiq-monitoring" => "Setup port forwarding to the Sidekiq Monitoring application.",
   }.freeze
 
   RABBITMQ_PORT = 15_672
-  SIDEKIQ_MONITORING_PORT = 3211
 
   JUMPBOXES = {
     test: {
@@ -934,16 +929,6 @@ class GovukConnect::CLI
           target,
           environment,
           port_forward: RABBITMQ_PORT,
-        )
-      end,
-
-      "sidekiq-monitoring" => proc do |target, environment, args, extra_args, _options|
-        check_for_additional_arguments("sidekiq-monitoring", args)
-        check_for_additional_arguments("sidekiq-monitoring", extra_args)
-        ssh(
-          target || "backend",
-          environment,
-          port_forward: SIDEKIQ_MONITORING_PORT,
         )
       end,
 
