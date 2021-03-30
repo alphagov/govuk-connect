@@ -36,17 +36,17 @@ RSpec.describe "ssh" do
       machine_class: "jumpbox",
       hostnames: %w[foo],
       environment: :production,
-      provider: :carrenza,
+      provider: :aws,
     )
 
     args = ssh_command(
       environment: :production,
       hostname: "foo",
-      provider: :carrenza,
+      provider: :aws,
     )
 
     allow(cli).to receive(:exec).with(*args)
-    cli.main(["-e", "production", "ssh", "carrenza/jumpbox"])
+    cli.main(["-e", "production", "ssh", "aws/jumpbox"])
     expect(cli).to have_received(:exec)
   end
 
