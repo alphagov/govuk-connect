@@ -81,9 +81,6 @@ class GovukConnect::CLI
     test: {
       aws: "jumpbox.pink.test.govuk.digital",
     },
-    ci: {
-      carrenza: "ci-jumpbox.integration.publishing.service.gov.uk",
-    },
     integration: {
       aws: "jumpbox.integration.publishing.service.gov.uk",
     },
@@ -91,7 +88,6 @@ class GovukConnect::CLI
       aws: "jumpbox.staging.govuk.digital",
     },
     production: {
-      carrenza: "jumpbox.publishing.service.gov.uk",
       aws: "jumpbox.production.govuk.digital",
     },
   }.freeze
@@ -312,7 +308,6 @@ class GovukConnect::CLI
       govuk_directory,
       "govuk-puppet",
       {
-        carrenza: "hieradata",
         aws: "hieradata_aws",
       }[hosting],
     )
@@ -418,29 +413,13 @@ class GovukConnect::CLI
     return hosting if hosting
 
     aws_node_types = govuk_node_list_classes(environment, :aws)
-    carrenza_node_types = govuk_node_list_classes(environment, :carrenza)
 
-    if aws_node_types.include?(node_type) &&
-        carrenza_node_types.include?(node_type)
-
-      error "error: ambiguous hosting for #{node_type} in #{environment}"
-      print_empty_line
-      info "specify the hosting provider and node type, for example: "
-      hosting_providers.each do |hosting_provider|
-        info "\n  gds govuk connect ssh #{bold(hosting_provider)}/#{node_type}"
-      end
-      info "\n"
-
-      exit 1
-    elsif aws_node_types.include?(node_type)
+    if aws_node_types.include?(node_type)
       :aws
-    elsif carrenza_node_types.include?(node_type)
-      :carrenza
     else
       error "error: couldn't find #{node_type} in #{environment}"
 
-      all_node_types = (aws_node_types + carrenza_node_types).uniq.sort
-      similar_node_types = strings_similar_to(node_type, all_node_types)
+      similar_node_types = strings_similar_to(node_type, aws_node_types)
 
       if similar_node_types.any?
         info "\ndid you mean:"
@@ -473,17 +452,6 @@ class GovukConnect::CLI
       log "debug: #{app_name} is hosted in AWS"
 
       return :aws
-    end
-
-    carrenza_app_names = application_names_from_node_class_data(
-      environment,
-      :carrenza,
-    )
-
-    if carrenza_app_names.include? app_name
-      log "debug: #{app_name} is hosted in Carrenza"
-
-      return :carrenza
     end
 
     error "error: unknown hosting value '#{hosting}' for #{app_name}"
@@ -632,7 +600,6 @@ class GovukConnect::CLI
   def rabbitmq_root_password_command(hosting, environment)
     hieradata_directory = {
       aws: "puppet_aws",
-      carrenza: "puppet",
     }[hosting]
 
     directory = File.join(
@@ -648,14 +615,11 @@ class GovukConnect::CLI
     uri = URI(url)
 
     host_to_hosting_and_environment = {
-      "ci-alert.integration.publishing.service.gov.uk" => %i[carrenza ci],
       "alert.integration.publishing.service.gov.uk" => %i[aws integration],
       "alert.staging.govuk.digital" => %i[aws staging],
       "alert.blue.staging.govuk.digital" => %i[aws staging],
-      "alert.staging.publishing.service.gov.uk" => %i[carrenza staging],
       "alert.production.govuk.digital" => %i[aws production],
       "alert.blue.production.govuk.digital" => %i[aws production],
-      "alert.publishing.service.gov.uk" => %i[carrenza production],
     }
 
     unless host_to_hosting_and_environment.key? uri.host
@@ -737,7 +701,7 @@ class GovukConnect::CLI
 
       hosting = hosting.to_sym
 
-      unless %i[carrenza aws].include? hosting
+      unless %i[aws].include? hosting
         error "error: unknown hosting provider: #{hosting}"
         print_empty_line
         info "available hosting providers are:"
@@ -814,9 +778,6 @@ class GovukConnect::CLI
     if name.end_with? ".internal"
       target = name
       hosting = :aws
-    elsif name.end_with? ".gov.uk"
-      target = name
-      hosting = :carrenza
     else
       # The hosting might not have been provided, so check if necessary
       hosting ||= hosting_for_target_and_environment(target, environment)
