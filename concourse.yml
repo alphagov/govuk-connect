@@ -43,8 +43,7 @@ jobs:
       inputs:
       - name: govuk-connect
       outputs:
-      - name: gems
-        path: dist
+      - name: dist
       platform: linux
       run:
         args:
@@ -52,8 +51,7 @@ jobs:
         - |
           echo "=== Building Gem..."
           cd govuk-connect
-          mkdir dist
-          gem build govuk-connect.gemspec --output dist/release.gem
+          gem build govuk-connect.gemspec --output ../dist/govuk-connect.gem
         path: /bin/bash
   - put: rubygems
     params:
