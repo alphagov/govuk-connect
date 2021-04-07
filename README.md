@@ -46,15 +46,25 @@ Whichever installation method you choose, you can use the above method or the st
 
 ## Releases
 
-When you've merged the PR that bumps the version (change value in `lib/govuk_connect/version.rb`), 
-publish a release tag and the gem to RubyGems from the `master` branch:
+### 1. Release the gem
+
+When you've merged the PR that bumps the version (change value in `lib/govuk_connect/version.rb`),
+publish a release tag and the gem to RubyGems from the `master` branch.
+
+The `gem push` step is done automatically by the [Concourse pipeline][], when you
+update the `version.rb` file.
 
 ```bash
+# Note: You shouldn't need to do this manually. This is done by Concourse.
 gem build govuk-connect
 gem push govuk-connect-<version>.gem # Credentials are in govuk-secrets/pass under packages/rubygems
 git tag <version> # eg 0.0.3
 git push origin <version>
 ```
+
+[Concourse pipeline]: https://cd.gds-reliability.engineering/teams/govuk-tools/pipelines/govuk-connect
+
+### 2. Update Homebrew
 
 To raise a PR to bump the Homebrew formula version, run:
 
@@ -67,4 +77,3 @@ To raise a PR to bump the Homebrew formula version, run:
 > bump-formula-pr` again. If you really can't do it, [consider
 > reopening a previous PR on this
 > topic](https://github.com/alphagov/govuk-connect/pull/21).
-

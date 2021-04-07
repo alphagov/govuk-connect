@@ -1,3 +1,24 @@
+---
+resource_types:
+  - name: rubygems
+    type: docker-image
+    source:
+      repository: govuk/concourse-rubygems
+      tag: 0.0.3
+
+resources:
+- icon: github-circle
+  name: govuk-connect
+  source:
+    uri: https://github.com/alphagov/govuk-connect
+  type: git
+- name: rubygems
+  type: rubygems
+  source:
+    gem_name: govuk-connect
+    credentials: |
+      :rubygems_api_key: ((rubygems_api_key))
+
 jobs:
 - name: update-pipeline
   plan:
@@ -9,7 +30,8 @@ jobs:
   plan:
   - get: govuk-connect
     trigger: true
-  - config:
+  - task: build-gem
+    config:
       container_limits: {}
       image_resource:
         source:
@@ -33,10 +55,9 @@ jobs:
           mkdir dist
           gem build govuk-connect.gemspec --output dist/release.gem
         path: /bin/bash
-    task: build-gem
-resources:
-- icon: github-circle
-  name: govuk-connect
-  source:
-    uri: https://github.com/alphagov/govuk-connect
-  type: git
+  - put: rubygems
+    params:
+      gem_dir: dist
+      gem_regex: govuk-connect
+    get_params:
+      skip_download: true
