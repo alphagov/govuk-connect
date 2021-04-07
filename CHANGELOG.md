@@ -1,5 +1,7 @@
 # Unreleased
 
+# 0.5.0
+
 * Remove support for sidekiq-monitoring ([#54](https://github.com/alphagov/govuk-connect/pull/54))
 * Remove carrenza CI and production ([#55](https://github.com/alphagov/govuk-connect/pull/55))
 
