@@ -1,5 +1,9 @@
 # Unreleased
 
+# 0.5.1
+
+* Add support for port forwarding to a remote host ([#56](https://github.com/alphagov/govuk-connect/pull/59))
+
 # 0.5.0
 
 * Remove support for sidekiq-monitoring ([#54](https://github.com/alphagov/govuk-connect/pull/54))

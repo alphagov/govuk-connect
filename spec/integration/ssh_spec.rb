@@ -31,6 +31,30 @@ RSpec.describe "ssh" do
     expect(cli).to have_received(:exec)
   end
 
+  it "supports forwarding to a port" do
+    args = ssh_command(
+      environment: :integration,
+      hostname: "hostname.internal",
+      suffix: ["-N", "-L", /\d+:127[.]0[.]0[.]1:80/],
+    )
+
+    allow(cli).to receive(:exec).with(*args)
+    cli.main(["-e", "integration", "ssh", "hostname.internal", "--port-forward", "80"])
+    expect(cli).to have_received(:exec)
+  end
+
+  it "supports forwarding to a port and a host" do
+    args = ssh_command(
+      environment: :integration,
+      hostname: "hostname.internal",
+      suffix: ["-N", "-L", /\d+:elasticsearch:80/],
+    )
+
+    allow(cli).to receive(:exec).with(*args)
+    cli.main(["-e", "integration", "ssh", "hostname.internal", "--port-forward", "elasticsearch:80"])
+    expect(cli).to have_received(:exec)
+  end
+
   it "supports SSHing to a specific provider" do
     stub_govuk_node_list(
       machine_class: "jumpbox",

@@ -543,10 +543,15 @@ class GovukConnect::CLI
     elsif port_forward
       localhost_port = random_free_port
 
+      host = "127.0.0.1"
+      if port_forward.is_a?(String) && port_forward.include?(":")
+        host, port_forward = port_forward.split(":")
+      end
+
       ssh_command += [
         "-N",
         "-L",
-        "#{localhost_port}:127.0.0.1:#{port_forward}",
+        "#{localhost_port}:#{host}:#{port_forward}",
       ]
 
       info "Port forwarding setup, access:\n\n  http://127.0.0.1:#{localhost_port}/\n\n"
@@ -650,7 +655,7 @@ class GovukConnect::CLI
         options[:hosting] = hosting
         options[:environment] = environment
       end
-      opts.on("-p", "--port-forward SERVICE", "Connect to a remote port") do |o|
+      opts.on("-p", "--port-forward [host:]hostport", "Connect to a remote host and port (remote host defaults to 127.0.0.1)") do |o|
         options[:port_forward] = o
       end
       opts.on("-v", "--verbose", "Enable more detailed logging") do
