@@ -741,7 +741,7 @@ class GovukConnect::CLI
     end
 
     if app_name_and_number.include? ":"
-      app_name, number = name_and_number.split ":"
+      app_name, number = app_name_and_number.split ":"
 
       number = number.to_i
     else
