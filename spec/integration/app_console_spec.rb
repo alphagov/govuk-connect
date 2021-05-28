@@ -52,7 +52,7 @@ RSpec.describe "app-(db)console" do
     )
 
     allow(cli).to receive(:exec).with(*args)
-    cli.main(["-e", "integration", "app-dbconsole", "my-app"])
+    cli.main(["-e", "integration", "app-dbconsole", "my-app:1"])
     expect(cli).to have_received(:exec)
   end
 
