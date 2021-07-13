@@ -1,5 +1,9 @@
 # Unreleased
 
+# 0.5.2
+
+* Fix incorrect call to ssh_capture ([#62](https://github.com/alphagov/govuk-connect/pull/62))
+
 # 0.5.1
 
 * Fix dbconsole undefined local variable or method `name_and_number' ([#61](https://github.com/alphagov/govuk-connect/pull/61))

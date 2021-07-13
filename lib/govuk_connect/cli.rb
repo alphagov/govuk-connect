@@ -254,7 +254,7 @@ class GovukConnect::CLI
 
   def govuk_node_list_classes(environment, hosting)
     log "debug: looking up classes in #{hosting}/#{environment}"
-    classes = ssh_capture("govuk_node_list --classes").sort
+    classes = ssh_capture(environment, hosting, "govuk_node_list --classes").sort
 
     log "debug: classes:"
     classes.each { |c| log " - #{c}" }
