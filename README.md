@@ -51,18 +51,16 @@ Whichever installation method you choose, you can use the above method or the st
 When you've merged the PR that bumps the version (change value in `lib/govuk_connect/version.rb`),
 publish a release tag and the gem to RubyGems from the `master` branch.
 
-The `gem push` step is done automatically by the [Concourse pipeline][], when you
+The `gem push` step is done automatically by the GitHub Action, when you
 update the `version.rb` file.
 
 ```bash
-# Note: You shouldn't need to do this manually. This is done by Concourse.
+# Note: You shouldn't need to do this manually. This is done by a GitHub Action
 gem build govuk-connect
 gem push govuk-connect-<version>.gem # Credentials are in govuk-secrets/pass under packages/rubygems
 git tag <version> # eg 0.0.3
 git push origin <version>
 ```
-
-[Concourse pipeline]: https://cd.gds-reliability.engineering/teams/govuk-tools/pipelines/govuk-connect
 
 ### 2. Update Homebrew
 

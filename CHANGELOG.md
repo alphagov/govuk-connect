@@ -1,5 +1,7 @@
 # Unreleased
 
+* Drop support for Ruby 2.5
+
 # 0.5.2
 
 * Fix incorrect call to ssh_capture ([#62](https://github.com/alphagov/govuk-connect/pull/62))
