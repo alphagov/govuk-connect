@@ -49,7 +49,7 @@ Whichever installation method you choose, you can use the above method or the st
 ### 1. Release the gem
 
 When you've merged the PR that bumps the version (change value in `lib/govuk_connect/version.rb`),
-publish a release tag and the gem to RubyGems from the `master` branch.
+publish a release tag and the gem to RubyGems from the `main` branch.
 
 The `gem push` step is done automatically by the GitHub Action, when you
 update the `version.rb` file.
