@@ -235,9 +235,7 @@ class GovukConnect::CLI
   end
 
   def ssh_identity_file
-    @ssh_identity_file ||= begin
-      YAML.load_file(config_file)["ssh_identity_file"] if File.exist? config_file
-    end
+    @ssh_identity_file ||= (YAML.load_file(config_file)["ssh_identity_file"] if File.exist? config_file)
   end
 
   def ssh_identity_arguments
@@ -664,7 +662,7 @@ class GovukConnect::CLI
         info EXAMPLES
         print_empty_line
         info bold("CONNECTION TYPES")
-        types.keys.each do |x|
+        types.each_key do |x|
           info "  #{x}"
           description = CONNECTION_TYPE_DESCRIPTIONS[x]
           info "    #{description}" if description
@@ -966,7 +964,7 @@ class GovukConnect::CLI
       warn @option_parser.help
 
       warn "\nValid connection types are:\n"
-      types.keys.each do |x|
+      types.each_key do |x|
         warn " - #{x}"
       end
       print_empty_line
@@ -982,7 +980,7 @@ class GovukConnect::CLI
       error "error: unknown connection type: #{type}\n"
 
       warn "Valid connection types are:\n"
-      types.keys.each do |x|
+      types.each_key do |x|
         warn " - #{x}"
       end
       print_empty_line
@@ -1004,7 +1002,7 @@ class GovukConnect::CLI
       error "error: unknown environment '#{environment}'"
       print_empty_line
       info "Valid environments are:"
-      JUMPBOXES.keys.each { |e| info " - #{e}" }
+      JUMPBOXES.each_key { |e| info " - #{e}" }
       exit 1
     end
 
