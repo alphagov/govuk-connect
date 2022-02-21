@@ -1,7 +1,7 @@
 on: [push, pull_request]
 
 jobs:
-  test:
+  test_matrix:
     strategy:
       matrix:
         # Should go down to lowest non-EOL version
@@ -15,6 +15,12 @@ jobs:
           bundler-cache: true
           ruby-version: ${{ matrix.ruby }}
       - run: bundle exec rake
+
+  test:
+    needs: test_matrix
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All matrix tests have passed 🚀"
 
   release:
     needs: test
