@@ -227,7 +227,7 @@ class GovukConnect::CLI
   def ssh_username
     @ssh_username ||= begin
       if File.exist? config_file
-        config_ssh_username = YAML.load_file(config_file)["ssh_username"]
+        config_ssh_username = load_yaml(config_file)["ssh_username"]
       end
 
       config_ssh_username || ENV["USER"]
@@ -235,7 +235,7 @@ class GovukConnect::CLI
   end
 
   def ssh_identity_file
-    @ssh_identity_file ||= (YAML.load_file(config_file)["ssh_identity_file"] if File.exist? config_file)
+    @ssh_identity_file ||= (load_yaml(config_file)["ssh_identity_file"] if File.exist? config_file)
   end
 
   def ssh_identity_arguments
@@ -313,16 +313,31 @@ class GovukConnect::CLI
     hieradata_file = File.join(local_hieradata_root, "#{environment}.yaml")
     log "debug: reading #{hieradata_file}"
 
-    environment_specific_hieradata = YAML.load_file(hieradata_file)
+    environment_specific_hieradata = load_yaml(hieradata_file)
 
     if environment_specific_hieradata["node_class"]
       environment_specific_hieradata["node_class"]
     else
-      common_hieradata = YAML.load_file(
+      common_hieradata = load_yaml(
         File.join(local_hieradata_root, "common.yaml"),
       )
 
       common_hieradata["node_class"]
+    end
+  end
+
+  def load_yaml(file_path)
+    # Psych (the gem that provides YAML parsing) introduced a new method,
+    # safe_load_file, in version 3.3 (which shipped with Ruby 3.0) and in
+    # version 4 (shipped with Ruby 3.1) the API for load_file changed and will
+    # error with GOV.UK hieradata.
+    #
+    # Once this gem no longer supports Ruby 2.x (or pins to a version of Psych)
+    # we can remove this conditional and use YAML.safe_load_file only
+    if YAML.respond_to?(:safe_load_file)
+      YAML.safe_load_file(file_path, aliases: true)
+    else
+      YAML.load_file(file_path)
     end
   end
 

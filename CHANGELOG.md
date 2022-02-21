@@ -1,5 +1,6 @@
 # Unreleased
 
+* Fix YAML alias parsing error for Ruby 3.1 ([#69](https://github.com/alphagov/govuk-connect/pull/69))
 * Drop support for Ruby 2.5
 
 # 0.5.2
