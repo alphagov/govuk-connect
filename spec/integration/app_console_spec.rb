@@ -60,12 +60,12 @@ RSpec.describe "app-(db)console" do
     base_path = "/home/user/govuk/govuk-puppet/hieradata_aws"
     file_path = "#{base_path}/#{environment}.yaml"
 
-    allow(YAML).to receive(:load_file).with(file_path)
+    allow(cli).to receive(:load_yaml).with(file_path)
       .and_return("node_class" => node_classes)
   end
 
   def disable_yaml_load_file
-    allow(YAML).to receive(:load_file) do |*args|
+    allow(cli).to receive(:load_yaml) do |*args|
       raise "Unexpected call to YAML: #{args}"
     end
   end
