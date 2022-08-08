@@ -6,7 +6,7 @@ jobs:
       matrix:
         # Should go down to lowest non-EOL version
         # https://www.ruby-lang.org/en/downloads/branches/
-        ruby: [2.6, 2.7, '3.0', 3.1]
+        ruby: [2.7, '3.0', 3.1]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "All matrix tests have passed 🚀"
-     
+
   publish:
     needs: test
     if: ${{ github.ref == 'refs/heads/main' }}
