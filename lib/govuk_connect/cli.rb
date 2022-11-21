@@ -29,6 +29,8 @@ class GovukConnect::CLI
     gds govuk connect app-dbconsole -e integration whitehall_backend/whitehall
 
     gds govuk connect rabbitmq -e staging aws/rabbitmq
+
+    gds govuk connect amazonmq -e integration
   EXAMPLES
 
   MACHINE_TARGET_DESCRIPTION = <<-DOCS.freeze
@@ -73,9 +75,11 @@ class GovukConnect::CLI
     "app-console" => "Launch a console for an application.  For example, a rails console when connecting to a Rails application.",
     "app-dbconsole" => "Launch a console for the database for an application.",
     "rabbitmq" => "Setup port forwarding to the RabbitMQ admin interface.",
+    "amazonmq" => "Setup port forwarding to the AmazonMQ admin interface.",
   }.freeze
 
   RABBITMQ_PORT = 15_672
+  AMAZONMQ_PORT = 443
 
   JUMPBOXES = {
     test: {
@@ -572,6 +576,40 @@ class GovukConnect::CLI
     exec(*ssh_command)
   end
 
+  def remote_port_forward(
+    target,
+    environment,
+    port_forward,
+    additional_arguments: []
+  )
+    log "debug: remote port-forward to #{target} in #{environment}"
+
+    target, hosting = ssh_target(target, environment)
+
+    localhost_port = random_free_port
+
+    ssh_command = [
+      "ssh",
+      *ssh_identity_arguments,
+      "-N",
+      "-L",
+      "#{localhost_port}:#{target}:#{port_forward}",
+      user_at_host(
+        ssh_username,
+        jumpbox_for_environment_and_hosting(environment, hosting),
+      ),
+    ]
+
+    info "Port forwarding setup, access:\n\n  https://127.0.0.1:#{localhost_port}/\n\n"
+    info "(ignore any warnings about certificate mis-match - this is expected and OK)"
+
+    ssh_command += additional_arguments
+
+    info "\n#{bold('Running command:')} #{ssh_command.join(' ')}\n\n"
+
+    exec(*ssh_command)
+  end
+
   def scp(
     target,
     environment,
@@ -622,6 +660,10 @@ class GovukConnect::CLI
     )
 
     "cd #{directory} && rake eyaml:decrypt_value[#{environment},govuk_rabbitmq::root_password]"
+  end
+
+  def amazonmq_root_password_command(environment)
+    "sops data/app-amazonmq/#{environment}/common.secret.tfvars"
   end
 
   def hosting_and_environment_from_url(url)
@@ -788,7 +830,7 @@ class GovukConnect::CLI
     # Split something like aws/backend:2 in to :aws, 'backend', 2
     hosting, name, number = parse_hosting_name_and_number(target)
 
-    if name.end_with? ".internal"
+    if name.end_with?(".internal") || name.end_with?(".govuk-internal.digital")
       target = name
       hosting = :aws
     else
@@ -903,6 +945,25 @@ class GovukConnect::CLI
           target,
           environment,
           port_forward: RABBITMQ_PORT,
+        )
+      end,
+
+      "amazonmq" => proc do |target, environment, args, extra_args, _options|
+        check_for_additional_arguments("amazonmq", args)
+        check_for_additional_arguments("amazonmq", extra_args)
+
+        target ||= "publishingmq.#{environment}.govuk-internal.digital"
+
+        info "You'll need to login as the RabbitMQ #{bold('root')} user."
+        info "Get the password from govuk-aws-data, for example:\n\n"
+        info "  # from the root directory of govuk-aws-data repository\n\n"
+        info "  #{bold(amazonmq_root_password_command(environment))}"
+        print_empty_line
+
+        remote_port_forward(
+          target,
+          environment,
+          AMAZONMQ_PORT,
         )
       end,
 
