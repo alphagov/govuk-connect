@@ -113,6 +113,10 @@ class GovukConnect::CLI
     info "Check this is correct, and if it isn't, set the `USER` environment variable to the correct username."
   end
 
+  def print_vpn_help_info
+    info "You may also wish to check that you are connected to the VPN, as attempting to SSH into an instance when NOT on the VPN can result in an operation timed out error"
+  end
+
   # From Rosetta Code: https://rosettacode.org/wiki/Levenshtein_distance#Ruby
   def levenshtein_distance(string1, string2)
     string1 = string1.downcase
@@ -289,6 +293,8 @@ class GovukConnect::CLI
       error "\nerror: command failed: #{command}"
       print_empty_line
       print_ssh_username_configuration_help
+      print_empty_line
+      print_vpn_help_info
       exit 1
     end
 
