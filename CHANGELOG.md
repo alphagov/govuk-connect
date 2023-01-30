@@ -1,3 +1,7 @@
+# 0.7.1
+
+* Improve error messaging when not using VPN ([#83](https://github.com/alphagov/govuk-connect/pull/83))
+
 # 0.7.0
 
 * Drop support for Ruby 2.6
