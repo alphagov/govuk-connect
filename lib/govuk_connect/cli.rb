@@ -849,7 +849,7 @@ class GovukConnect::CLI
         hosting,
       )
 
-      if domains.length.zero?
+      if domains.empty?
         error "error: couldn't find #{name} in #{hosting}/#{environment}"
 
         node_types = govuk_node_list_classes(environment, hosting)
