@@ -916,19 +916,32 @@ class GovukConnect::CLI
     end
   end
 
+  def target_name_to_k8s_deployment(target_name)
+    {
+      /draft_[a-z_]+\/([a-z_-]+)/ => "draft-\\1",
+      /.*\// => "", # If not draft, drop the Puppet class prefix.
+      "whitehall_backend/whitehall" => "whitehall-admin",
+      "whitehall_frontend/whitehall" => "whitehall-frontend",
+    }.reduce(target_name) do |result, (pattern, replacement)|
+      result.sub(pattern, replacement)
+    end
+  end
+
   def types
     @types ||= {
       "app-console" => proc do |target, _environment, _args, _extra_args, _options|
         target ||= "<app-name>"
+        deployment = target_name_to_k8s_deployment(target)
         info "#{bold('The command for opening a Rails console has changed. Run this instead:')}\n\n"
-        info "  k exec -it deploy/#{target} -- rails c\n\n"
+        info "  k exec -it deploy/#{deployment} -- rails c\n\n"
         print_k8s_setup_info
       end,
 
       "app-dbconsole" => proc do |target, _environment, _args, _extra_args, _options|
         target ||= "<app-name>"
+        deployment = target_name_to_k8s_deployment(target)
         info "#{bold('The command for opening a Rails dbconsole has changed. Run this instead:')}\n\n"
-        info "  k exec -it deploy/#{target} -- rails db\n\n"
+        info "  k exec -it deploy/#{deployment} -- rails db\n\n"
         print_k8s_setup_info
       end,
 
