@@ -24,10 +24,6 @@ class GovukConnect::CLI
 
     gds govuk connect scp-pull --environment integration backend /tmp/filename.txt ~/Downloads/
 
-    gds govuk connect app-console --environment staging publishing-api
-
-    gds govuk connect app-dbconsole -e integration whitehall_backend/whitehall
-
     gds govuk connect rabbitmq -e staging aws/rabbitmq
 
     gds govuk connect amazonmq -e integration
@@ -72,8 +68,8 @@ class GovukConnect::CLI
 
   CONNECTION_TYPE_DESCRIPTIONS = {
     "ssh" => "Connect to a machine through SSH.",
-    "app-console" => "Launch a console for an application.  For example, a rails console when connecting to a Rails application.",
-    "app-dbconsole" => "Launch a console for the database for an application.",
+    "app-console" => "(DEPRECATED; use kubectl instead) Launch a Rails console for an application.",
+    "app-dbconsole" => "(DEPRECATED; use kubectl instead) Launch a Rails database console for an application.",
     "rabbitmq" => "Setup port forwarding to the RabbitMQ admin interface.",
     "amazonmq" => "Setup port forwarding to the AmazonMQ admin interface.",
   }.freeze
@@ -119,6 +115,11 @@ class GovukConnect::CLI
 
   def print_vpn_help_info
     info "You may also wish to check that you are connected to the VPN, as attempting to SSH into an instance when NOT on the VPN can result in an operation timed out error"
+  end
+
+  def print_k8s_setup_info
+    info "If that doesn't work for you, follow the setup instructions at"
+    info "https://govuk-k8s-user-docs.publishing.service.gov.uk/get-started/access-eks-cluster\n"
   end
 
   # From Rosetta Code: https://rosettacode.org/wiki/Levenshtein_distance#Ruby
@@ -915,20 +916,33 @@ class GovukConnect::CLI
     end
   end
 
+  def target_name_to_k8s_deployment(target_name)
+    {
+      /draft_[a-z_]+\/([a-z_-]+)/ => "draft-\\1",
+      /.*\// => "", # If not draft, drop the Puppet class prefix.
+      "whitehall_backend/whitehall" => "whitehall-admin",
+      "whitehall_frontend/whitehall" => "whitehall-frontend",
+    }.reduce(target_name) do |result, (pattern, replacement)|
+      result.sub(pattern, replacement)
+    end
+  end
+
   def types
     @types ||= {
-      "app-console" => proc do |target, environment, args, extra_args, _options|
-        check_for_target(target)
-        check_for_additional_arguments("app-console", args)
-        check_for_additional_arguments("app-console", extra_args)
-        govuk_app_command(target, environment, "console")
+      "app-console" => proc do |target, _environment, _args, _extra_args, _options|
+        target ||= "<app-name>"
+        deployment = target_name_to_k8s_deployment(target)
+        info "#{bold('The command for opening a Rails console has changed. Run this instead:')}\n\n"
+        info "  k exec -it deploy/#{deployment} -- rails c\n\n"
+        print_k8s_setup_info
       end,
 
-      "app-dbconsole" => proc do |target, environment, args, extra_args, _options|
-        check_for_target(target)
-        check_for_additional_arguments("app-dbconsole", args)
-        check_for_additional_arguments("app-dbconsole", extra_args)
-        govuk_app_command(target, environment, "dbconsole")
+      "app-dbconsole" => proc do |target, _environment, _args, _extra_args, _options|
+        target ||= "<app-name>"
+        deployment = target_name_to_k8s_deployment(target)
+        info "#{bold('The command for opening a Rails dbconsole has changed. Run this instead:')}\n\n"
+        info "  k exec -it deploy/#{deployment} -- rails db\n\n"
+        print_k8s_setup_info
       end,
 
       "rabbitmq" => proc do |target, environment, args, extra_args, _options|

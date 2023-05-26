@@ -1,5 +1,7 @@
-## Unreleased
+## 0.8.0
 
+* govuk-connect will be retired in the near future, once the remaining govuk-puppet infrastructure has been decommissioned.
+* The `app-console` and `app-dbconsole` commands, which have not worked since the move to Kubernetes, now print a message with the equivalent kubectl command.
 * Drop support for Ruby 2.7.
 
 # 0.7.1
