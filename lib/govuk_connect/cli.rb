@@ -119,7 +119,7 @@ class GovukConnect::CLI
 
   def print_k8s_setup_info
     info "If that doesn't work for you, follow the setup instructions at"
-    info "https://govuk-k8s-user-docs.publishing.service.gov.uk/get-started/access-eks-cluster\n"
+    info "https://govuk-kubernetes-cluster-user-docs.publishing.service.gov.uk/get-started/access-eks-cluster\n"
   end
 
   # From Rosetta Code: https://rosettacode.org/wiki/Levenshtein_distance#Ruby
