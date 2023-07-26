@@ -1,3 +1,7 @@
+## 0.8.1
+
+* Update link to GOV.UK Kubernetes docs in output.
+
 ## 0.8.0
 
 * govuk-connect will be retired in the near future, once the remaining govuk-puppet infrastructure has been decommissioned.
