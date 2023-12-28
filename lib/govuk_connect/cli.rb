@@ -151,12 +151,10 @@ class GovukConnect::CLI
   def check_ruby_version_greater_than(required_major:, required_minor:)
     major, minor = RUBY_VERSION.split "."
 
-    insufficient_version = (
-      major.to_i < required_major || (
-        major.to_i == required_major &&
-        minor.to_i < required_minor
-      )
-    )
+    insufficient_version =
+      major.to_i < required_major ||
+      major.to_i == required_major &&
+      minor.to_i < required_minor
 
     if insufficient_version
       error "insufficient Ruby version: #{RUBY_VERSION}"
